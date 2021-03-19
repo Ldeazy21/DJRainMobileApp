@@ -1,0 +1,3 @@
+# DJRainMobileApp
+
+Backend is firebase

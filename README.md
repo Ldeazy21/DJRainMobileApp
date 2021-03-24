@@ -1,6 +1,7 @@
 # DJRainMobileApp
 
-Backend is firebase
+Frontend - React Native
+Backend - Firebase
 
 
 UI Screens (Figma)

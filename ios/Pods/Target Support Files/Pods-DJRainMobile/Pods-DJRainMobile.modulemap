@@ -1,0 +1,6 @@
+module Pods_DJRainMobile {
+  umbrella header "Pods-DJRainMobile-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,10 +1,8 @@
 import React from 'react';
 import { View } from 'react-native';
 
-const Home = () => {
+export default function Onboarding() {
   return (
     <View/>
   );
 }
-
-export default Home;

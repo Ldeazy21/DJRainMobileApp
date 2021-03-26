@@ -1,14 +1,18 @@
+import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 
-import { Home, SignIn, CreateAccount } from './screens';
-const Stack = createStackNavigator();
+import Onboarding from './screens/onboarding';
+import SignIn from './screens/signIn';
+import CreateAccount from './screens/createAccount';
 
-export default function AuthStack() {
+const AuthStack = createStackNavigator();
+
+export default function AuthStackComponent() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="Home" component={Home} />
-      <Stack.Screen name="SignIn" component={SignIn} />
-      <Stack.Screen name="CreateAccount" component={CreateAccount} />
-    </Stack.Navigator>
+    <AuthStack.Navigator>
+      <AuthStack.Screen name="Onboarding" component={Onboarding} options={{headerShown: false}}/>
+      <AuthStack.Screen name="SignIn" component={SignIn} />
+      <AuthStack.Screen name="CreateAccount" component={CreateAccount} />
+    </AuthStack.Navigator>
   );
 }

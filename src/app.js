@@ -1,8 +1,9 @@
 import React from 'react';
-import { View } from 'react-native';
+
+import MainStack from './setup/navigation';
 
 export default function App() {
   return (
-    <View/>
+    <MainStack/>
   );
 }

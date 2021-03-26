@@ -6,12 +6,12 @@ import store from './setup/redux/store';
 
 import App from './app';
 
-export default App = () => {
+export default Container = () => {
   return (
-    <NavigationContainer>
-      <Provider store={store}>
+    <Provider store={store}>
+      <NavigationContainer>
         <App/>
-      </Provider>
-    </NavigationContainer>
+      </NavigationContainer>
+    </Provider>
   )
 }

@@ -9,10 +9,10 @@ https://www.figma.com/file/1GcyZjAafXuPALG64pQYGa/DJ-Rain-Mobile-App?node-id=5%3
 
 iOS
 yarn <br>
-npx pod-install
-npx react-native run-ios
-
-Android
-yarn
+npx pod-install<br>
+npx react-native run-ios<br>
+<br><br>
+Android<br>
+yarn<br>
 npx react-native run-android
 

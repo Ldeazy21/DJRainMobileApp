@@ -8,8 +8,11 @@ UI Screens (Figma)
 https://www.figma.com/file/1GcyZjAafXuPALG64pQYGa/DJ-Rain-Mobile-App?node-id=5%3A13
 
 iOS
-npx pod-install
-To run this on iOS : npx react-native run-ios
+yarn <br>
+npx pod-install<br>
+npx react-native run-ios<br>
+<br><br>
+Android<br>
+yarn<br>
+npx react-native run-android
 
-Android
-To run this on android : npx react-native run-android

@@ -2,8 +2,8 @@ import React from 'react';
 import { View, StyleSheet, Image, Text } from 'react-native';
 import { Button } from 'react-native-paper';
 import LinearGradient from 'react-native-linear-gradient';
+import Accessibility from '../../img/accessibility.svg';
 import Headphone from '../../img/headphone-symbol.svg';
-
 
 export default function Onboarding({ navigation }) {
   return (
@@ -28,9 +28,12 @@ export default function Onboarding({ navigation }) {
               Start Streaming your favorite mixes from DJ Rain
             </Text>
           </View>
-          <View>
-          <Headphone width={100} height={100} />
+          
+          <View style={{width: 100, height: 100, backgroundColor: 'white'}}>
+            <Headphone width={100} height={100} />
           </View>
+          
+          
           <View>
             <Button mode="contained" color='#003E95' style={styles.button} onPress={() => {navigation.navigate('CreateAccount')}}>
               Create An Account
@@ -38,9 +41,6 @@ export default function Onboarding({ navigation }) {
           </View>
       </LinearGradient>
     </View>
-
-
-    
   );
 }
 
@@ -70,17 +70,17 @@ const styles = StyleSheet.create({
   image: {
     flex: 1,
     width: '100%',
-    resizeMode: "cover",
+    resizeMode: "cover"
   },
   linearGradient: {
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 5,
     height: '100%',
-    width: '100%',
+    width: '100%'
   },
   button: {
     padding: 10,
-    color: '#003E95',
-     },
+    color: '#003E95'
+  },
 })

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/DJRainMobile.iml" filepath="$PROJECT_DIR$/.idea/modules/DJRainMobile.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/DJRainMobile.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/DJRainMobile.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-277187448/DJRainMobile.react-native-community_masked-view.iml" filepath="$PROJECT_DIR$/.idea/modules/-277187448/DJRainMobile.react-native-community_masked-view.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1810572633/DJRainMobile.react-native-config.iml" filepath="$PROJECT_DIR$/.idea/modules/1810572633/DJRainMobile.react-native-config.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1500506098/DJRainMobile.react-native-firebase_app.iml" filepath="$PROJECT_DIR$/.idea/modules/1500506098/DJRainMobile.react-native-firebase_app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/976476495/DJRainMobile.react-native-gesture-handler.iml" filepath="$PROJECT_DIR$/.idea/modules/976476495/DJRainMobile.react-native-gesture-handler.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1596427617/DJRainMobile.react-native-linear-gradient.iml" filepath="$PROJECT_DIR$/.idea/modules/1596427617/DJRainMobile.react-native-linear-gradient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-948703379/DJRainMobile.react-native-reanimated.iml" filepath="$PROJECT_DIR$/.idea/modules/-948703379/DJRainMobile.react-native-reanimated.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-1552557576/DJRainMobile.react-native-safe-area-context.iml" filepath="$PROJECT_DIR$/.idea/modules/-1552557576/DJRainMobile.react-native-safe-area-context.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-1637691376/DJRainMobile.react-native-screens.iml" filepath="$PROJECT_DIR$/.idea/modules/-1637691376/DJRainMobile.react-native-screens.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1547276397/DJRainMobile.react-native-svg.iml" filepath="$PROJECT_DIR$/.idea/modules/1547276397/DJRainMobile.react-native-svg.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1521375463/DJRainMobile.react-native-vector-icons.iml" filepath="$PROJECT_DIR$/.idea/modules/1521375463/DJRainMobile.react-native-vector-icons.iml" />
+    </modules>
+  </component>
+</project>

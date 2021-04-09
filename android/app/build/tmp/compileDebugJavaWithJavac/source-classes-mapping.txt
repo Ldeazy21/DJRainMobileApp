@@ -1,0 +1,14 @@
+com/djrainmobile/BuildConfig.java
+ com.djrainmobile.BuildConfig
+com/djrainmobile/MainActivity.java
+ com.djrainmobile.MainActivity
+com/djrainmobile/MainApplication.java
+ com.djrainmobile.MainApplication
+ com.djrainmobile.MainApplication$1
+com/djrainmobile/ReactNativeFlipper.java
+ com.djrainmobile.ReactNativeFlipper
+ com.djrainmobile.ReactNativeFlipper$1
+ com.djrainmobile.ReactNativeFlipper$2
+ com.djrainmobile.ReactNativeFlipper$2$1
+com/facebook/react/PackageList.java
+ com.facebook.react.PackageList

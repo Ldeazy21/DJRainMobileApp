@@ -1,11 +1,17 @@
-import React from 'react';
+import React,{useLayoutEffect} from 'react';
 import { View, StyleSheet, Image, Text } from 'react-native';
 import { Button } from 'react-native-paper';
 import LinearGradient from 'react-native-linear-gradient';
 import Accessibility from '../../img/accessibility.svg';
-import Headphone from '../../img/headphone-symbol.svg';
+// import Headphone from '../../img/donnie.svg';
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 export default function Onboarding({ navigation }) {
+  useLayoutEffect(()=>{
+      navigation.setOptions({
+        headerShown:false,
+      })
+  },[])
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -29,15 +35,20 @@ export default function Onboarding({ navigation }) {
             </Text>
           </View>
           
-          <View style={{width: 100, height: 100, backgroundColor: 'white'}}>
-            <Headphone width={100} height={100} />
+          <View style={{width: 100, height: 100}}>
+           
+            <MaterialCommunityIcons  name='headset' size={100} color='#003e95'/>
           </View>
           
           
-          <View>
+          <View style={styles.btnSection}>
             <Button mode="contained" color='#003E95' style={styles.button} onPress={() => {navigation.navigate('CreateAccount')}}>
               Create An Account
             </Button>
+            <View style={{justifyContent:'center',alignItems:'center',flexDirection:'row', marginTop:5}}>
+              <Text>Already have account? </Text>
+              <Text style={{color:'white'}} onPress={()=>navigation.navigate('SignIn')} >Sign</Text>
+            </View>
           </View>
       </LinearGradient>
     </View>
@@ -79,8 +90,16 @@ const styles = StyleSheet.create({
     height: '100%',
     width: '100%'
   },
+  btnSection:{
+    marginTop:50
+  },
   button: {
-    padding: 10,
+    // padding: 10,
+    justifyContent:'center',
+    width:325,
+    height:50,
     color: '#003E95'
   },
+ 
+  
 })

@@ -46,7 +46,7 @@ const Menu = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Image style={styles.image} source={require("../../img/back.png")} />
+      <Image style={styles.image} source={require("../../img/djrain.png")} />
       {list.map((item, i) => (
    
         <List title={item.title} />
@@ -78,16 +78,18 @@ const styles = StyleSheet.create({
   },
   image: {
     position: "absolute",
-    width: 500,
-    height: 844,
-    left: -237,
-    top: 103,
+    width: 390,
+    height: 750,
+    left: -800,
+    top: 90,
     ...StyleSheet.absoluteFillObject,
   },
   imageSection: {
-    justifyContent: "center",
+    flexDirection: "column",
+    justifyContent: "flex-end",
     alignItems: "center",
-    top: 150,
+    bottom: 100,
+    flex: 1,
   },
   frontImage: {
     width: "100%",

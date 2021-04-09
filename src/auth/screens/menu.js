@@ -52,6 +52,9 @@ const Menu = ({ navigation }) => {
         <List title={item.title} />
       ))}
 
+
+{/* This is a banner image that client will update/maintain */}
+
       <View style={styles.imageSection}>
         <Image
           style={styles.frontImage}
@@ -88,7 +91,7 @@ const styles = StyleSheet.create({
   },
   frontImage: {
     width: "100%",
-  
-    
+    borderColor: "#ffffff",
+    borderWidth: 1,
   },
 });

@@ -11,11 +11,11 @@ const AuthStack = createStackNavigator();
 export default function AuthStackComponent() {
   return (
     <AuthStack.Navigator >
+      <AuthStack.Screen name="Onboarding" component={Onboarding}/>
+      <AuthStack.Screen name="SignIn" component={SignIn} />
+      <AuthStack.Screen name="CreateAccount" component={CreateAccount} />
       <AuthStack.Screen name="About" component={About} />
       <AuthStack.Screen name="Menu" component={Menu} />
-      <AuthStack.Screen name="Onboarding" component={Onboarding}/>
-      <AuthStack.Screen name="CreateAccount" component={CreateAccount} />
-      <AuthStack.Screen name="SignIn" component={SignIn} />
     </AuthStack.Navigator>
   );
 }

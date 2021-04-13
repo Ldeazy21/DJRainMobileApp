@@ -67,20 +67,31 @@ export default Menu;
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#001B40",
-    flexDirection: "column",
+    // flexDirection: "column",
     ...StyleSheet.absoluteFillObject,
+  
   },
   aboutArea: {
-    alignSelf: "center",
-    justifyContent: "center",
+    backgroundColor:'white',
+        alignItems:'center',
+        justifyContent:'center',
+        flex:1,
+        paddingTop:20
+  
+    
+    // flex: 1,
+    // alignSelf: "center",
+    // justifyContent: "center",
   },
   headerTitle: {
     fontSize: 24,
     backgroundColor: "black",
     position:"absolute",
     color: "#ffffff",
-    // alignSelf: "center",
-    // justifyContent: "center",
+    alignSelf: "center",
+    justifyContent: "center",
+    position: "absolute",
+    top:70,
     fontWeight: "600",
     flex:1,
     padding: 20,

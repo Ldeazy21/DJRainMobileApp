@@ -68,23 +68,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#001B40",
-    flexDirection: "column",
+    // flexDirection: "column",
     ...StyleSheet.absoluteFillObject,
+  
   },
   aboutArea: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    top: 190,
+        backgroundColor:'white',
+        alignItems:'center',
+        justifyContent:'center',
+        flex:1,
+        paddingTop:20
+  
+    
+    // flex: 1,
+    // alignSelf: "center",
+    // justifyContent: "center",
   },
   headerTitle: {
     position: "relative",
     fontSize: 28,
     backgroundColor: "#001B40",
     position:"absolute",
-    color: "#3EB3E8",
-    // alignSelf: "center",
-    // justifyContent: "center",
+    color: "#ffffff",
+    alignSelf: "center",
+    justifyContent: "center",
+    position: "absolute",
+    top:70,
     fontWeight: "600",
     flex:1,
     padding: 20,

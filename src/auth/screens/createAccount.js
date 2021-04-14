@@ -90,9 +90,9 @@ export default function CreateAccount({ navigation }) {
         <Button mode="contained" color='#4467BE' style={styles.button, styles.btn} >
               CONTINUE WITH FACEBOOK
             </Button>
-            <View style={{justifyContent:'center',alignItems:'center',flexDirection:'row', marginTop:5}}>
-              <Text>Already have account? </Text>
-              <Text style={{color:'white'}} onPress={()=>navigation.navigate('SignIn')} >Sign</Text>
+            <View style={{justifyContent:'center',alignItems:'center',flexDirection:'row', marginTop:15, color: 'white'}}>
+              <Text style={{color:'white', fontWeight: 'bold'}}>Already have account? </Text>
+              <Text style={{color:'#3EB3E8', fontWeight: 'bold'}} onPress={()=>navigation.navigate('SignIn')} >Sign</Text>
             </View>
             </View>
        

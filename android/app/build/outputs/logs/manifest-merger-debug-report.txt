@@ -15,6 +15,7 @@ MERGED from [:react-native-gesture-handler] F:\Landon\DJRainMobileApp\node_modul
 MERGED from [:react-native-safe-area-context] F:\Landon\DJRainMobileApp\node_modules\react-native-safe-area-context\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-9:12
 MERGED from [:react-native-screens] F:\Landon\DJRainMobileApp\node_modules\react-native-screens\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-11:12
 MERGED from [:react-native-svg] F:\Landon\DJRainMobileApp\node_modules\react-native-svg\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-9:12
+MERGED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-34:12
 MERGED from [:react-native-vector-icons] F:\Landon\DJRainMobileApp\node_modules\react-native-vector-icons\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-11:12
 MERGED from [com.facebook.react:react-native:0.64.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\89509e2cde335ae884aee2081b82c9b3\jetified-react-native-0.64.0\AndroidManifest.xml:2:1-13:12
 MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\09243ba706c53361768779b6da14150c\swiperefreshlayout-1.0.0\AndroidManifest.xml:17:1-22:12
@@ -43,6 +44,7 @@ MERGED from [androidx.appcompat:appcompat-resources:1.1.0] C:\Users\hp\.gradle\c
 MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\1c6e8573701de9ce8179f706f4bfd060\vectordrawable-animated-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\62782611b2eb0017b121edfa931bb758\interpolator-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [com.google.android.gms:play-services-auth:19.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\25f09bfece1865c7af1dcae6b6398926\jetified-play-services-auth-19.0.0\AndroidManifest.xml:17:1-40:12
+MERGED from [com.github.bumptech.glide:glide:4.7.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\04c2b6ec4eb95f121388372e8025f371\jetified-glide-4.7.1\AndroidManifest.xml:2:1-13:12
 MERGED from [com.google.android.gms:play-services-auth-api-phone:17.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\e3c3a59b25640e15e2991e49c4e601da\jetified-play-services-auth-api-phone-17.0.0\AndroidManifest.xml:2:1-7:12
 MERGED from [com.google.android.gms:play-services-auth-base:17.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\16d23188b00997ba0d8f3ee855b82540\jetified-play-services-auth-base-17.0.0\AndroidManifest.xml:2:1-7:12
 MERGED from [com.google.android.gms:play-services-base:17.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\4b6b321ffbadcc395125cd9cf513a7c1\jetified-play-services-base-17.1.0\AndroidManifest.xml:17:1-29:12
@@ -52,6 +54,7 @@ MERGED from [com.google.android.gms:play-services-basement:17.1.1] C:\Users\hp\.
 MERGED from [androidx.viewpager2:viewpager2:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\cab2197e2d783b3f03ccf55cdf613e65\jetified-viewpager2-1.0.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.fragment:fragment:1.2.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\49db241baefde366c9e7e5c52d4de47e\fragment-1.2.1\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\bf8ecddc212fd7a0820d65414591cef6\coordinatorlayout-1.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media:media:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\59933da925e05853c61a5d2c9c1c46d4\media-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\8b5045e6f05a4ded00e3d4139b0d31b0\drawerlayout-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\7075e6a89c7374f4614df0d05e6ba7cd\loader-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\58f1d9842ac84e982e1603ee9ddb419b\viewpager-1.0.0\AndroidManifest.xml:17:1-22:12
@@ -60,13 +63,16 @@ MERGED from [androidx.recyclerview:recyclerview:1.1.0] C:\Users\hp\.gradle\cache
 MERGED from [androidx.customview:customview:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\901f62f2b50b9b68eaccead0086843f0\customview-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.transition:transition:1.2.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\1d53c1a329218c1979f1bc5925eb0a56\transition-1.2.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\c7961a8854b20c95f85bc7edc1ea70d0\vectordrawable-1.1.0\AndroidManifest.xml:17:1-24:12
-MERGED from [androidx.core:core:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\5333129088c549fb5c349f1a3efe9cb3\core-1.1.0\AndroidManifest.xml:17:1-26:12
+MERGED from [androidx.core:core:1.3.0-rc01] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\ed85920f85e18dbad6c60889eaf7d06d\core-1.3.0-rc01\AndroidManifest.xml:17:1-26:12
+MERGED from [com.google.android.exoplayer:exoplayer-core:2.11.4] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\865aece82802ed6e982c6185f3720d08\jetified-exoplayer-core-2.11.4\AndroidManifest.xml:17:1-26:12
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.1.0-alpha01] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\fc554a19ae5c846df0c81300e31a4bef\localbroadcastmanager-1.1.0-alpha01\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\9d6bcd47610abcb6b7a954e8d8acbe44\cursoradapter-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.sqlite:sqlite:2.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\61cb6bbc760e2ac0dd62f9829a6a78e6\sqlite-2.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\06bf23fefd055b035abbc97b70482ed3\versionedparcelable-1.1.0\AndroidManifest.xml:17:1-27:12
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.2.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\3d5b26362046a165a045968d320cd8d6\jetified-lifecycle-viewmodel-savedstate-2.2.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.2.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\6b6dc4f438a0d9591056cafb4705ff32\lifecycle-viewmodel-2.2.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.cardview:cardview:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\c114a77691ebfd99087ee7929a117c96\cardview-1.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [com.github.bumptech.glide:gifdecoder:4.7.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\3e3f46c6ce51d399dc085552c2f9b5da\jetified-gifdecoder-4.7.1\AndroidManifest.xml:2:1-11:12
 MERGED from [com.google.firebase:firebase-components:16.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\799af73dccb6b7ee1b2ee3d1ef9733a9\jetified-firebase-components-16.1.0\AndroidManifest.xml:15:1-23:12
 MERGED from [androidx.lifecycle:lifecycle-runtime:2.2.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\3bad793ed1a5f48dfe77b77cf2d1f03c\lifecycle-runtime-2.2.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.savedstate:savedstate:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\8e9a7723d11538e31e06b3e72c5b2e29\jetified-savedstate-1.0.0\AndroidManifest.xml:17:1-24:12
@@ -105,6 +111,8 @@ application
 ADDED from F:\Landon\DJRainMobileApp\android\app\src\main\AndroidManifest.xml:6:5-24:19
 MERGED from F:\Landon\DJRainMobileApp\android\app\src\main\AndroidManifest.xml:6:5-24:19
 MERGED from F:\Landon\DJRainMobileApp\android\app\src\main\AndroidManifest.xml:6:5-24:19
+MERGED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:14:5-32:19
+MERGED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:14:5-32:19
 MERGED from [com.facebook.react:react-native:0.64.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\89509e2cde335ae884aee2081b82c9b3\jetified-react-native-0.64.0\AndroidManifest.xml:11:5-20
 MERGED from [com.facebook.react:react-native:0.64.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\89509e2cde335ae884aee2081b82c9b3\jetified-react-native-0.64.0\AndroidManifest.xml:11:5-20
 MERGED from [com.facebook.soloader:soloader:0.10.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\f21476606fcdf4f8b29515995bfa6dce\jetified-soloader-0.10.1\AndroidManifest.xml:11:5-20
@@ -113,6 +121,8 @@ MERGED from [com.google.android.material:material:1.1.0] C:\Users\hp\.gradle\cac
 MERGED from [com.google.android.material:material:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\5f9723b495b86fc09957c5cf733fc960\material-1.1.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.gms:play-services-auth:19.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\25f09bfece1865c7af1dcae6b6398926\jetified-play-services-auth-19.0.0\AndroidManifest.xml:22:5-38:19
 MERGED from [com.google.android.gms:play-services-auth:19.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\25f09bfece1865c7af1dcae6b6398926\jetified-play-services-auth-19.0.0\AndroidManifest.xml:22:5-38:19
+MERGED from [com.github.bumptech.glide:glide:4.7.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\04c2b6ec4eb95f121388372e8025f371\jetified-glide-4.7.1\AndroidManifest.xml:11:5-20
+MERGED from [com.github.bumptech.glide:glide:4.7.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\04c2b6ec4eb95f121388372e8025f371\jetified-glide-4.7.1\AndroidManifest.xml:11:5-20
 MERGED from [com.google.android.gms:play-services-base:17.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\4b6b321ffbadcc395125cd9cf513a7c1\jetified-play-services-base-17.1.0\AndroidManifest.xml:22:5-27:19
 MERGED from [com.google.android.gms:play-services-base:17.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\4b6b321ffbadcc395125cd9cf513a7c1\jetified-play-services-base-17.1.0\AndroidManifest.xml:22:5-27:19
 MERGED from [com.google.firebase:firebase-common:19.5.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\fcd1561ee9e3c1f85c040174ff8e10ae\jetified-firebase-common-19.5.0\AndroidManifest.xml:25:5-47:19
@@ -121,12 +131,14 @@ MERGED from [com.google.android.gms:play-services-tasks:17.0.0] C:\Users\hp\.gra
 MERGED from [com.google.android.gms:play-services-tasks:17.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\d3924a7825a4ec52802bf150d155e3c4\jetified-play-services-tasks-17.0.0\AndroidManifest.xml:7:5-20
 MERGED from [com.google.android.gms:play-services-basement:17.1.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\2fa733120df08330c72da753b14285b2\jetified-play-services-basement-17.1.1\AndroidManifest.xml:22:5-26:19
 MERGED from [com.google.android.gms:play-services-basement:17.1.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\2fa733120df08330c72da753b14285b2\jetified-play-services-basement-17.1.1\AndroidManifest.xml:22:5-26:19
-MERGED from [androidx.core:core:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\5333129088c549fb5c349f1a3efe9cb3\core-1.1.0\AndroidManifest.xml:24:5-89
-MERGED from [androidx.core:core:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\5333129088c549fb5c349f1a3efe9cb3\core-1.1.0\AndroidManifest.xml:24:5-89
+MERGED from [androidx.core:core:1.3.0-rc01] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\ed85920f85e18dbad6c60889eaf7d06d\core-1.3.0-rc01\AndroidManifest.xml:24:5-89
+MERGED from [androidx.core:core:1.3.0-rc01] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\ed85920f85e18dbad6c60889eaf7d06d\core-1.3.0-rc01\AndroidManifest.xml:24:5-89
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\06bf23fefd055b035abbc97b70482ed3\versionedparcelable-1.1.0\AndroidManifest.xml:24:5-25:19
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\06bf23fefd055b035abbc97b70482ed3\versionedparcelable-1.1.0\AndroidManifest.xml:24:5-25:19
+MERGED from [com.github.bumptech.glide:gifdecoder:4.7.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\3e3f46c6ce51d399dc085552c2f9b5da\jetified-gifdecoder-4.7.1\AndroidManifest.xml:9:5-20
+MERGED from [com.github.bumptech.glide:gifdecoder:4.7.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\3e3f46c6ce51d399dc085552c2f9b5da\jetified-gifdecoder-4.7.1\AndroidManifest.xml:9:5-20
 	android:appComponentFactory
-		ADDED from [androidx.core:core:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\5333129088c549fb5c349f1a3efe9cb3\core-1.1.0\AndroidManifest.xml:24:18-86
+		ADDED from [androidx.core:core:1.3.0-rc01] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\ed85920f85e18dbad6c60889eaf7d06d\core-1.3.0-rc01\AndroidManifest.xml:24:18-86
 	android:label
 		ADDED from F:\Landon\DJRainMobileApp\android\app\src\main\AndroidManifest.xml:8:7-39
 		ADDED from F:\Landon\DJRainMobileApp\android\app\src\main\AndroidManifest.xml:8:7-39
@@ -197,6 +209,8 @@ MERGED from [:react-native-screens] F:\Landon\DJRainMobileApp\node_modules\react
 MERGED from [:react-native-screens] F:\Landon\DJRainMobileApp\node_modules\react-native-screens\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:7:5-9:41
 MERGED from [:react-native-svg] F:\Landon\DJRainMobileApp\node_modules\react-native-svg\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-7:41
 MERGED from [:react-native-svg] F:\Landon\DJRainMobileApp\node_modules\react-native-svg\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-7:41
+MERGED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:7:5-9:41
+MERGED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:7:5-9:41
 MERGED from [:react-native-vector-icons] F:\Landon\DJRainMobileApp\node_modules\react-native-vector-icons\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:7:5-9:41
 MERGED from [:react-native-vector-icons] F:\Landon\DJRainMobileApp\node_modules\react-native-vector-icons\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:7:5-9:41
 MERGED from [com.facebook.react:react-native:0.64.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\89509e2cde335ae884aee2081b82c9b3\jetified-react-native-0.64.0\AndroidManifest.xml:7:5-9:41
@@ -253,6 +267,8 @@ MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\hp\.gradle\cache
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\62782611b2eb0017b121edfa931bb758\interpolator-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [com.google.android.gms:play-services-auth:19.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\25f09bfece1865c7af1dcae6b6398926\jetified-play-services-auth-19.0.0\AndroidManifest.xml:20:5-44
 MERGED from [com.google.android.gms:play-services-auth:19.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\25f09bfece1865c7af1dcae6b6398926\jetified-play-services-auth-19.0.0\AndroidManifest.xml:20:5-44
+MERGED from [com.github.bumptech.glide:glide:4.7.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\04c2b6ec4eb95f121388372e8025f371\jetified-glide-4.7.1\AndroidManifest.xml:7:5-9:41
+MERGED from [com.github.bumptech.glide:glide:4.7.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\04c2b6ec4eb95f121388372e8025f371\jetified-glide-4.7.1\AndroidManifest.xml:7:5-9:41
 MERGED from [com.google.android.gms:play-services-auth-api-phone:17.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\e3c3a59b25640e15e2991e49c4e601da\jetified-play-services-auth-api-phone-17.0.0\AndroidManifest.xml:5:5-44
 MERGED from [com.google.android.gms:play-services-auth-api-phone:17.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\e3c3a59b25640e15e2991e49c4e601da\jetified-play-services-auth-api-phone-17.0.0\AndroidManifest.xml:5:5-44
 MERGED from [com.google.android.gms:play-services-auth-base:17.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\16d23188b00997ba0d8f3ee855b82540\jetified-play-services-auth-base-17.0.0\AndroidManifest.xml:5:5-44
@@ -271,6 +287,8 @@ MERGED from [androidx.fragment:fragment:1.2.1] C:\Users\hp\.gradle\caches\transf
 MERGED from [androidx.fragment:fragment:1.2.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\49db241baefde366c9e7e5c52d4de47e\fragment-1.2.1\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\bf8ecddc212fd7a0820d65414591cef6\coordinatorlayout-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\bf8ecddc212fd7a0820d65414591cef6\coordinatorlayout-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.media:media:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\59933da925e05853c61a5d2c9c1c46d4\media-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.media:media:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\59933da925e05853c61a5d2c9c1c46d4\media-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\8b5045e6f05a4ded00e3d4139b0d31b0\drawerlayout-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\8b5045e6f05a4ded00e3d4139b0d31b0\drawerlayout-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\7075e6a89c7374f4614df0d05e6ba7cd\loader-1.0.0\AndroidManifest.xml:20:5-44
@@ -287,8 +305,12 @@ MERGED from [androidx.transition:transition:1.2.0] C:\Users\hp\.gradle\caches\tr
 MERGED from [androidx.transition:transition:1.2.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\1d53c1a329218c1979f1bc5925eb0a56\transition-1.2.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\c7961a8854b20c95f85bc7edc1ea70d0\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\c7961a8854b20c95f85bc7edc1ea70d0\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.core:core:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\5333129088c549fb5c349f1a3efe9cb3\core-1.1.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.core:core:1.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\5333129088c549fb5c349f1a3efe9cb3\core-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core:1.3.0-rc01] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\ed85920f85e18dbad6c60889eaf7d06d\core-1.3.0-rc01\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core:1.3.0-rc01] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\ed85920f85e18dbad6c60889eaf7d06d\core-1.3.0-rc01\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-core:2.11.4] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\865aece82802ed6e982c6185f3720d08\jetified-exoplayer-core-2.11.4\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-core:2.11.4] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\865aece82802ed6e982c6185f3720d08\jetified-exoplayer-core-2.11.4\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.1.0-alpha01] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\fc554a19ae5c846df0c81300e31a4bef\localbroadcastmanager-1.1.0-alpha01\AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.1.0-alpha01] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\fc554a19ae5c846df0c81300e31a4bef\localbroadcastmanager-1.1.0-alpha01\AndroidManifest.xml:20:5-44
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\9d6bcd47610abcb6b7a954e8d8acbe44\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\9d6bcd47610abcb6b7a954e8d8acbe44\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.sqlite:sqlite:2.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\61cb6bbc760e2ac0dd62f9829a6a78e6\sqlite-2.1.0\AndroidManifest.xml:20:5-22:41
@@ -301,6 +323,8 @@ MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.2.0] C:\Users\hp\.gradle\c
 MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.2.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\6b6dc4f438a0d9591056cafb4705ff32\lifecycle-viewmodel-2.2.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.cardview:cardview:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\c114a77691ebfd99087ee7929a117c96\cardview-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.cardview:cardview:1.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\c114a77691ebfd99087ee7929a117c96\cardview-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [com.github.bumptech.glide:gifdecoder:4.7.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\3e3f46c6ce51d399dc085552c2f9b5da\jetified-gifdecoder-4.7.1\AndroidManifest.xml:5:5-7:41
+MERGED from [com.github.bumptech.glide:gifdecoder:4.7.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\3e3f46c6ce51d399dc085552c2f9b5da\jetified-gifdecoder-4.7.1\AndroidManifest.xml:5:5-7:41
 MERGED from [com.google.firebase:firebase-components:16.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\799af73dccb6b7ee1b2ee3d1ef9733a9\jetified-firebase-components-16.1.0\AndroidManifest.xml:19:5-21:41
 MERGED from [com.google.firebase:firebase-components:16.1.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\799af73dccb6b7ee1b2ee3d1ef9733a9\jetified-firebase-components-16.1.0\AndroidManifest.xml:19:5-21:41
 MERGED from [androidx.lifecycle:lifecycle-runtime:2.2.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\3bad793ed1a5f48dfe77b77cf2d1f03c\lifecycle-runtime-2.2.0\AndroidManifest.xml:20:5-22:41
@@ -337,6 +361,32 @@ uses-permission#android.permission.ACCESS_WIFI_STATE
 ADDED from [com.facebook.flipper:flipper:0.75.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\5a27bcb627122afa1cbbd4a629cfca68\jetified-flipper-0.75.1\AndroidManifest.xml:16:5-76
 	android:name
 		ADDED from [com.facebook.flipper:flipper:0.75.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\5a27bcb627122afa1cbbd4a629cfca68\jetified-flipper-0.75.1\AndroidManifest.xml:16:22-73
+uses-permission#android.permission.WAKE_LOCK
+ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:11:5-68
+	android:name
+		ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:11:22-65
+uses-permission#android.permission.FOREGROUND_SERVICE
+ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:12:5-77
+	android:name
+		ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:12:22-74
+service#com.guichaguri.trackplayer.service.MusicService
+ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:17:9-24:19
+	android:enabled
+		ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:19:13-35
+	android:exported
+		ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:20:13-36
+	android:name
+		ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:18:13-75
+intent-filter#action:name:android.intent.action.MEDIA_BUTTON
+ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:21:13-23:29
+action#android.intent.action.MEDIA_BUTTON
+ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:22:17-77
+	android:name
+		ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:22:25-74
+receiver#androidx.media.session.MediaButtonReceiver
+ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:27:9-31:20
+	android:name
+		ADDED from [:react-native-track-player] F:\Landon\DJRainMobileApp\node_modules\react-native-track-player\android\build\intermediates\library_manifest\debug\AndroidManifest.xml:27:19-76
 activity#com.google.android.gms.auth.api.signin.internal.SignInHubActivity
 ADDED from [com.google.android.gms:play-services-auth:19.0.0] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\25f09bfece1865c7af1dcae6b6398926\jetified-play-services-auth-19.0.0\AndroidManifest.xml:23:9-27:75
 	android:excludeFromRecents
@@ -399,3 +449,7 @@ ADDED from [com.google.android.gms:play-services-basement:17.1.1] C:\Users\hp\.g
 		ADDED from [com.google.android.gms:play-services-basement:17.1.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\2fa733120df08330c72da753b14285b2\jetified-play-services-basement-17.1.1\AndroidManifest.xml:25:13-66
 	android:name
 		ADDED from [com.google.android.gms:play-services-basement:17.1.1] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\2fa733120df08330c72da753b14285b2\jetified-play-services-basement-17.1.1\AndroidManifest.xml:24:13-58
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from [com.google.android.exoplayer:exoplayer-core:2.11.4] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\865aece82802ed6e982c6185f3720d08\jetified-exoplayer-core-2.11.4\AndroidManifest.xml:24:5-79
+	android:name
+		ADDED from [com.google.android.exoplayer:exoplayer-core:2.11.4] C:\Users\hp\.gradle\caches\transforms-2\files-2.1\865aece82802ed6e982c6185f3720d08\jetified-exoplayer-core-2.11.4\AndroidManifest.xml:24:22-76

@@ -4,7 +4,7 @@
             "outputFile": "F:\\Landon\\DJRainMobileApp\\android\\app\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-vi\\values-vi.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\hp\\.gradle\\caches\\transforms-2\\files-2.1\\5333129088c549fb5c349f1a3efe9cb3\\core-1.1.0\\res\\values-vi\\values-vi.xml",
+                    "source": "C:\\Users\\hp\\.gradle\\caches\\transforms-2\\files-2.1\\ed85920f85e18dbad6c60889eaf7d06d\\core-1.3.0-rc01\\res\\values-vi\\values-vi.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

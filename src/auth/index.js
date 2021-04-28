@@ -5,6 +5,7 @@ import SignIn from './screens/signIn';
 import CreateAccount from './screens/createAccount';
 import Menu from './screens/menu';
 import About from './screens/about';
+<<<<<<< HEAD
 import Player from './screens/player';
 import Home from './screens/home';
 import Events from './screens/events';
@@ -13,11 +14,15 @@ import Event from './screens/event';
 import Photos from './screens/photos';
 import Spotlight from './screens/artists';
 
+=======
+import ArtistsSpotlight from './screens/artistspotlight';
+>>>>>>> 77b432b99e7129e9e96baac9e3a50af34e39a948
 
 const AuthStack = createStackNavigator();
 
 export default function AuthStackComponent() {
   return (
+<<<<<<< HEAD
     <AuthStack.Navigator>
       <AuthStack.Screen name="Spotlight" component={Spotlight} />
       <AuthStack.Screen name="Photos" component={Photos} />
@@ -28,7 +33,13 @@ export default function AuthStackComponent() {
       <AuthStack.Screen name="Player" component={Player} />
       <AuthStack.Screen name="Onboarding" component={Onboarding}/>
       <AuthStack.Screen name="SignIn" component={SignIn} />
+=======
+    <AuthStack.Navigator >
+>>>>>>> 77b432b99e7129e9e96baac9e3a50af34e39a948
       <AuthStack.Screen name="CreateAccount" component={CreateAccount} />
+      <AuthStack.Screen name="SignIn" component={SignIn} />
+      <AuthStack.Screen name="ArtistsSpotlight" component={ArtistsSpotlight} />
+      <AuthStack.Screen name="Onboarding" component={Onboarding}/>
       <AuthStack.Screen name="About" component={About} />
       <AuthStack.Screen name="Menu" component={Menu} />
     </AuthStack.Navigator>

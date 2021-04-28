@@ -81,7 +81,7 @@ export default function SignIn({ navigation }) {
               SIGN IN
             </Button>
            <View style={{justifyContent:'center',alignItems:'center',flexDirection:'row', marginTop:5}}>
-           <Text style={{color:'white'}}>Forgot password</Text>
+           <Text style={{color:'white', fontWeight: 'bold'}}>Forgot password</Text>
            </View>
         </View>
       
@@ -97,9 +97,9 @@ export default function SignIn({ navigation }) {
           
           
           
-            <View style={{justifyContent:'center',alignItems:'center',flexDirection:'row', marginTop:5}}>
-              <Text>Don`t have account? </Text>
-              <Text style={{color:'white'}} onPress={()=>navigation.navigate('CreateAccount')} >Create Account</Text>
+            <View style={{justifyContent:'center',alignItems:'center',flexDirection:'row', marginTop:5, fontWeight: 'bold'}}>
+              <Text style={{color: 'white', fontWeight: 'bold'}}>Don`t have account? </Text>
+              <Text style={{color:'#3EB3E8', fontWeight: 'bold' }} onPress={()=>navigation.navigate('CreateAccount')} >Create Account</Text>
             </View>
             </View>
     </View>
@@ -112,12 +112,9 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingRight:25,
     paddingLeft:25,
-   flex:1,
-   justifyContent: 'space-evenly',
-    
-    height: '100%',
- 
-    
+    flex:1,
+    justifyContent: 'space-evenly',
+    height: '100%',  
   },
   input_group:{
     marginTop:25
@@ -134,7 +131,6 @@ const styles = StyleSheet.create({
     paddingRight:20,
     borderWidth:1,
     height:50,
-    
     backgroundColor:'#001B40',
     color:'white',
   borderRadius:5
@@ -147,17 +143,14 @@ const styles = StyleSheet.create({
     borderWidth:1,
     height:50,
     width:343,
-    
     backgroundColor:'#001B40',
     color:'white',
-  borderRadius:5
+    borderRadius:5
   },
   passwordIcon:{
     marginTop:13,
     position: "absolute",
     marginLeft:300,
-   
-
   },
   social_btns: {
     marginTop:50,
@@ -168,11 +161,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height:50,
   },
-
-  
-
- 
-  
   linearGradient: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -198,8 +186,4 @@ const styles = StyleSheet.create({
     height: 95, 
     marginBottom: 30
   },
-
-  
- 
-  
 })

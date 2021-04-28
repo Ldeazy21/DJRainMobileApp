@@ -8,7 +8,6 @@ import {
   ScrollView,
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import { ListItem, Icon } from "react-native-elements";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
 import List from "../../components/List";
@@ -52,12 +51,10 @@ const Menu = ({ navigation }) => {
           source={require("../../img/aboutheader.png")}
         />
       </View>
-      <View style={styles.aboutArea}><Text style={styles.headerTitle}>About Dj Rain</Text></View>
+      <View style={styles.aboutArea}><Text style={styles.headerTitle}>Artists Spotlight</Text></View>
        <View style={styles.scroll}>
-          <ScrollView>
-            <Text style={styles.description}>DJ Cassidy has been at the nexus of music, fashion, and nightlife for over half his living years as the go-to deejay for music impresarios, entertainment moguls, fashion icons, cultural trendsetters, and even world leaders. When President Obama wanted a deejay for both of his Inaugurations and his fiftieth birthday party at the White House, there's only one person he called. When Oprah Winfrey celebrated the opening of her school in South Africa on New Years Eve, there’s only one person she called. When Jay Z needed a deejay for his wedding to Beyoncé, there's only one person he called. And when Jay, Justin Timberlake, Usher, and Robin Thicke sought out artists to join their world tours, there’s only one person they called.
+            <Text style={styles.description}>DJ Cassidy has been at the nexus of music, fashion, and nightlife for over half his living years as the go-to deejay for music impresarios, entertainment moguls, fashion icons, cultural trendsetters, and even world leaders. When President Obama wanted a deejay for both of his Inaugurations and his fiftieth birthday party at the White House, there's only one person he called. 
             </Text> 
-         </ScrollView>
        </View>
       </View>
   );
@@ -68,38 +65,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#001B40",
-    // flexDirection: "column",
+    flexDirection: "column",
     ...StyleSheet.absoluteFillObject,
-  
   },
   aboutArea: {
-        backgroundColor:'white',
-        alignItems:'center',
-        justifyContent:'center',
-        flex:1,
-        paddingTop:20
-  
-    
-    // flex: 1,
-    // alignSelf: "center",
-    // justifyContent: "center",
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    top: 50,
   },
   headerTitle: {
-    position: "relative",
+    // position: "relative",
     fontSize: 28,
     backgroundColor: "#001B40",
-    position:"absolute",
-    color: "#ffffff",
-    alignSelf: "center",
-    justifyContent: "center",
-    position: "absolute",
-    top:70,
+    // position:"absolute",
+    color: "#3EB3E8",
+    // alignSelf: "center",
+    // justifyContent: "center",
     fontWeight: "600",
-    flex:1,
+    // flex:1,
     padding: 20,
   },
   scroll: {
-    top: 220,
+    // top: 220,
     paddingTop: 20,
     paddingBottom: 20,
     marginBottom: 20,

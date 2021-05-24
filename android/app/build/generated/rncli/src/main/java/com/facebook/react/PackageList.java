@@ -13,8 +13,6 @@ import java.util.ArrayList;
 
 // @react-native-community/masked-view
 import org.reactnative.maskedview.RNCMaskedViewPackage;
-// @react-native-firebase/app
-import io.invertase.firebase.app.ReactNativeFirebaseAppPackage;
 // react-native-config
 import com.lugg.ReactNativeConfig.ReactNativeConfigPackage;
 // react-native-gesture-handler
@@ -79,7 +77,6 @@ public class PackageList {
     return new ArrayList<>(Arrays.<ReactPackage>asList(
       new MainReactPackage(mConfig),
       new RNCMaskedViewPackage(),
-      new ReactNativeFirebaseAppPackage(),
       new ReactNativeConfigPackage(),
       new RNGestureHandlerPackage(),
       new LinearGradientPackage(),

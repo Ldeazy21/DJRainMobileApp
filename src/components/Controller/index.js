@@ -2,7 +2,7 @@ import React from 'react';
 import {View,TouchableOpacity,StyleSheet,Text} from 'react-native';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { Slider } from 'react-native-elements';
-function Controller() {
+function Controller({TrackPlayer}) {
     return (
         <View style={styles.container}>
            <View>
@@ -19,7 +19,7 @@ function Controller() {
     {/* <MaterialCommunityIcons nam="skip-previous-circle-outline" size={12}/> */}
 </TouchableOpacity>
 <TouchableOpacity>
-<MaterialCommunityIcons  name='play-outline' size={50} color='#003e95'/>
+<MaterialCommunityIcons  name='play-outline' size={50} color='#003e95' onPress={()=>TrackPlayer.play()}/>
 </TouchableOpacity>
 <TouchableOpacity>
 <MaterialCommunityIcons name="skip-next" size={45} color='#003e95' />

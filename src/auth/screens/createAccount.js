@@ -140,7 +140,7 @@ setUserName('')
               justifyContent: "center",
               alignItems: "center",
               flexDirection: "row",
-              marginTop: 15,
+              marginTop: 5,
               color: "white",
             }}
           >
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     borderWidth: 1,
     height: 50,
-    width: 343,
+    width: '100%',
 
     backgroundColor: "#001B40",
     color: "white",
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   btnSection: {
-    marginTop: 50,
+    marginTop: 20,
   },
   button: {
     justifyContent: "center",
@@ -236,5 +236,10 @@ const styles = StyleSheet.create({
   },
   social_btn: {
     marginTop: 10,
+  },
+  logo: {
+    width: 160,
+    height: 95,
+    marginBottom: 30,
   },
 });

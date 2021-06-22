@@ -1,12 +1,20 @@
-import React,{useLayoutEffect} from 'react';
+import React,{useLayoutEffect,useEffect} from 'react';
 import { View, StyleSheet, Image, Text } from 'react-native';
 import { Button } from 'react-native-paper';
 import LinearGradient from 'react-native-linear-gradient';
 import Accessibility from '../../img/accessibility.svg';
 // import Headphone from '../../img/donnie.svg';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { auth } from '../../../Firebase';
 
 export default function Onboarding({ navigation }) {
+  useEffect(()=>{
+    auth.onAuthStateChanged(authState =>{
+      if(authState){
+        navigation.replace('Home')
+      }
+    })
+  },[])
   useLayoutEffect(()=>{
       navigation.setOptions({
         headerShown:false,

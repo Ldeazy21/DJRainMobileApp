@@ -15,13 +15,17 @@ function Events({navigation}) {
                 alignSelf: 'center'
               },
     
-        //   headerLeft: () => (
-        //     <View style={{ marginLeft: 20 }}>
-        //       <TouchableOpacity>
-        //         <MaterialIcons name="menu" size={26} color='#003e95'/>
-        //       </TouchableOpacity>
-        //     </View>
-        //   ),
+              headerLeft: () => (
+                <View style={{ marginLeft: 20 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                     navigation.toggleDrawer()
+                    }}
+                  >
+                    <MaterialIcons name="menu" size={26} color='#003e95' />
+                  </TouchableOpacity>
+                </View>
+              ),
           headerRight: () => (
             <View style={{ marginRight: 20, flexDirection:'row', justifyContent:'center',alignItems:'center' }}>
              
@@ -70,9 +74,14 @@ function Events({navigation}) {
          keyExtractor={(item)=>item.id}
          data={events}
          renderItem={({item})=>(
+            
+
+
             <EventsList
             event={item}
+            navigation={navigation}
             />
+          
          )}
 
 
@@ -91,7 +100,8 @@ export default Events
 const styles = StyleSheet.create({
     container: {
         backgroundColor: "#001B40",
-        ...StyleSheet.absoluteFillObject,
+        // ...StyleSheet.absoluteFillObject,
+        flex:1,
         paddingRight: 26,
         paddingLeft: 26,
     },

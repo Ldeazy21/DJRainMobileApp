@@ -12,6 +12,17 @@ function Spotlight({navigation}) {
   
                 alignSelf: 'center'
               },
+              headerLeft: () => (
+                <View style={{ marginLeft: 20 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                     navigation.toggleDrawer()
+                    }}
+                  >
+                    <MaterialIcons name="menu" size={26} color='#003e95' />
+                  </TouchableOpacity>
+                </View>
+              ),
               headerRight: () => (
                 <View style={{ marginRight: 20, flexDirection:'row', justifyContent:'center',alignItems:'center' }}>
                  
@@ -25,21 +36,21 @@ function Spotlight({navigation}) {
     },[navigation])
     return (
         <View style={styles.container}>
-           <View style={styles.coverImage}>
+             {/* DJ Cassidy has been at the nexus of music, fashion, and nightlife for over half his living years as the go-to deejay for music impresarios, entertainment moguls, fashion icons, cultural trendsetters, and even world leaders. When President Obama wanted a deejay for both of his Inaugurations and his fiftieth birthday party at the White House, there's only one person he called.  */}
 
            <Image
            style={styles.image}
            source={require("../../img/aboutheader.png")}
            />
-           </View>
+          
            <View style={styles.artistDetails}>
 
            <Text style={styles.title}>Artists Name</Text>
           <View style={{justifyContent:'center',alignItems:'center',}}>
               
            <Text style={styles.subTitle}>
+         
            DJ Cassidy has been at the nexus of music, fashion, and nightlife for over half his living years as the go-to deejay for music impresarios, entertainment moguls, fashion icons, cultural trendsetters, and even world leaders. When President Obama wanted a deejay for both of his Inaugurations and his fiftieth birthday party at the White House, there's only one person he called. 
-
            </Text>
            
           </View>
@@ -65,7 +76,8 @@ export default Spotlight
 const styles = StyleSheet.create({
     container: {
         backgroundColor: "#001B40",
-        ...StyleSheet.absoluteFillObject,
+        // ...StyleSheet.absoluteFillObject,
+        flex:1
        
     },
     coverImage:{
@@ -83,8 +95,8 @@ maxHeight:382,
         // color:'white',
         marginTop:5,
         fontWeight:'600',
-        fontSize:13, 
-        lineHeight:18,
+        fontSize:17, 
+        lineHeight:20,
         marginBottom:10
     },
     btn: {
@@ -105,19 +117,13 @@ maxHeight:382,
         width:'100%',
         height:180,
         top:0,
-        position: "absolute",
+ 
     
   
     },
     artistDetails: {
-        position: 'absolute',
-    
-        left: '10.13%',
-        right: '32.8%',
-        top: '25.71%',
-        bottom: '61.58%',
-        width:323,
-        height:193,
+      padding:20
+  
         
     },
    

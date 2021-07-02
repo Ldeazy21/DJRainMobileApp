@@ -3,7 +3,7 @@ import {View,Text,StyleSheet,Image,TouchableOpacity} from 'react-native'
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import EntypoIcons from "react-native-vector-icons/Entypo";
-function Event({navigation}) {
+function Event({navigation,route}) {
 
     useLayoutEffect(()=>{
         navigation.setOptions({
@@ -13,6 +13,17 @@ function Event({navigation}) {
   
                 alignSelf: 'center'
               },
+              headerLeft: () => (
+                <View style={{ marginLeft: 20 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                     navigation.toggleDrawer()
+                    }}
+                  >
+                    <MaterialIcons name="menu" size={26} color='#003e95' />
+                  </TouchableOpacity>
+                </View>
+              ),
               headerRight: () => (
                 <View style={{ marginRight: 20, flexDirection:'row', justifyContent:'center',alignItems:'center' }}>
                  
@@ -34,10 +45,14 @@ function Event({navigation}) {
            />
            </View>
            <View style={styles.eventDetails}>
-
-           <Text style={styles.title}>Event Title</Text>
-           <Text style={styles.subTitle}>10PM-12PM</Text>
-           <Text style={styles.subTitle}>Lavish Lounge</Text>
+           {/* id:Math.random(),
+              eventType:'Club Event',
+              location:'Lavish Lounge',
+              time:'10pm-12pm',
+              date:'1 FEB' */}
+           <Text style={styles.title}>{route.params.event.eventType}</Text>
+           <Text style={styles.subTitle}>{route.params.event.time}</Text>
+           <Text style={styles.subTitle}>{route.params.event.location}</Text>
            <Text style={styles.subTitle}>200 E St.John St</Text>
            <Text style={styles.subTitle}>Spartanburg, SC 29607</Text>
            <TouchableOpacity style={styles.shareBtn}>
@@ -59,7 +74,8 @@ export default Event
 const styles = StyleSheet.create({
     container: {
         backgroundColor: "#001B40",
-        ...StyleSheet.absoluteFillObject,
+        // ...StyleSheet.absoluteFillObject,
+        flex:1
        
     },
     coverImage:{
@@ -89,7 +105,7 @@ maxHeight:382,
     image:{
         width:'100%',
         height:382,
-        top:-85,
+        top:-150,
         position: "absolute",
     
   

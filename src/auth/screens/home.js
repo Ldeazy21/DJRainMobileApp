@@ -6,6 +6,7 @@ import Player from './player';
 // import MiniPlayer from '../../components/miniPlayer';
 
 import { AuthContext } from '../Context/AuthContext';
+import { SafeAreaView } from 'react-native';
 function Home({ navigation }) {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
@@ -13,16 +14,22 @@ function Home({ navigation }) {
   const [selectedSong, setSelectedSong] = useState(null)
   const { song, modalVisible, toggleModal,music } = useContext(AuthContext);
 
-
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: "",
+      title: "Home",
+      headerShown:true,
+      headerTitleStyle:{
+          color:"#1A54DC",
+
+          alignSelf: 'center'
+        },
+
 
       headerLeft: () => (
         <View style={{ marginLeft: 20 }}>
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate('Player')
+             navigation.toggleDrawer()
             }}
           >
             <MaterialIcons name="menu" size={26} color='#003e95' />
@@ -43,16 +50,9 @@ function Home({ navigation }) {
   }, [navigation]);
 
 
-  const renderCard = (song, id) => {
-    return (
-      <>
-        <SongCard key={id} song={song} navigation={navigation} />
-
-      </>
-    )
-  }
 
   return (
+    <>
     <View style={styles.container}>
       <ScrollView>
 
@@ -95,7 +95,7 @@ function Home({ navigation }) {
       }
     </View>
 
-
+    </>
 
 
 
@@ -108,7 +108,8 @@ export default Home
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#001B40",
-    ...StyleSheet.absoluteFillObject
+    flex:1
+    // ...StyleSheet.absoluteFillObject
     // minHeight: "100%",
     // paddingLeft: 20,
     // paddingRight: 20,

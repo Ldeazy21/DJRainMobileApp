@@ -12,6 +12,17 @@ function Photos({navigation}) {
   
                 alignSelf: 'center'
               },
+              headerLeft: () => (
+                <View style={{ marginLeft: 20 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                     navigation.toggleDrawer()
+                    }}
+                  >
+                    <MaterialIcons name="menu" size={26} color='#003e95' />
+                  </TouchableOpacity>
+                </View>
+              ),
               headerRight: () => (
                 <View style={{ marginRight: 20, flexDirection:'row', justifyContent:'center',alignItems:'center' }}>
                  
@@ -22,7 +33,7 @@ function Photos({navigation}) {
                 </View>
               ),
         })
-    },[])
+    },[navigation])
     const columns =3
     const photos = [
       {
@@ -106,7 +117,8 @@ export default Photos
 const styles = StyleSheet.create({
     container: {
         backgroundColor: "#001B40",
-        ...StyleSheet.absoluteFillObject,
+        flex:1,
+        // ...StyleSheet.absoluteFillObject,
         justifyContent:'center',
         alignItems: 'center',
         padding:15

@@ -2,11 +2,13 @@ import React from 'react';
 import {View,StyleSheet,Text,Image,TouchableOpacity} from 'react-native';
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { Avatar } from "react-native-elements/dist/avatar/Avatar";
-function EventsList({event}) {
+function EventsList({event,navigation}) {
     return (
      
         <View >
-            <TouchableOpacity style={styles.container}>
+            <TouchableOpacity style={styles.container} onPress={()=>{
+                navigation.navigate('Event',{event})
+            }}>
 
         <View style={{flexDirection:'row',alignItems:'center'}} >
 

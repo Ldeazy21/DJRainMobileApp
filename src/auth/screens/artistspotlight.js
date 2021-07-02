@@ -28,8 +28,12 @@ const Menu = ({ navigation }) => {
 
       headerLeft: () => (
         <View style={{ marginLeft: 20 }}>
-          <TouchableOpacity>
-            <MaterialIcons name="menu" size={26} color='#003e95'/>
+          <TouchableOpacity
+            onPress={() => {
+             navigation.toggleDrawer()
+            }}
+          >
+            <MaterialIcons name="menu" size={26} color='#003e95' />
           </TouchableOpacity>
         </View>
       ),
@@ -66,7 +70,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#001B40",
     flexDirection: "column",
-    ...StyleSheet.absoluteFillObject,
+    flex:1
+    // ...StyleSheet.absoluteFillObject,
   },
   aboutArea: {
     flex: 1,

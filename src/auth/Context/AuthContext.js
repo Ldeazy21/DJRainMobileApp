@@ -13,6 +13,7 @@ export const AuthContextProvider = ({ children, navigation }) => {
   
     // const [song,setSong] = useState(null)
     const [music, setMusic] = useState([])
+    const [filteredMusic,setFilteredMusic] = useState([])
     const [songInfo,setSongInfo] = useState(null)
     const [playing,setPlaying] =  useState(false)
 
@@ -70,7 +71,7 @@ export const AuthContextProvider = ({ children, navigation }) => {
 
     const toggleModal = () => {
         setModalVisible(!modalVisible)
-        // alert("Some")
+       
 
     }
 
@@ -81,7 +82,9 @@ export const AuthContextProvider = ({ children, navigation }) => {
     }
 
     useEffect(() => {
+     
         setMusic(data)
+        setFilteredMusic(data)
     }, [])
 
     useLayoutEffect(() => {
@@ -104,6 +107,17 @@ export const AuthContextProvider = ({ children, navigation }) => {
         })
       
     }, [])
+
+    // const handleSearch = (text)=>{
+    //     let = text.toLowerCase()
+    //     let results = music.filter((item)=>{
+    //         return item.name.toLowerCase().match(text)
+    //     })
+    //     if(!text || text === ''){
+            
+    //     }
+        
+    // }
 
 
 

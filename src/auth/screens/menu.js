@@ -16,12 +16,12 @@ import List from "../../components/List";
 const Menu = ({ navigation }) => {
   const drawer = createDrawerNavigator();
   const list = [
-    { title: "ABOUT DJ RAIN" },
-    { title: "MIXES" },
-    { title: "EVENTS" },
-    { title: "PHOTOS" },
+    { title: "ABOUT DJ RAIN",name:'About' },
+    { title: "MIXES",name:'Home' },
+    { title: "EVENTS",name:'Events' },
+    { title: "PHOTOS",name:'Photos' },
     { title: "BUY DJ RAIN MERCH" },
-    { title: "ARTISTS OF THE MONTH" },
+    { title: "ARTISTS OF THE MONTH",name:'Spotlight' },
   ];
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -48,8 +48,10 @@ const Menu = ({ navigation }) => {
     <View style={styles.container}>
       <Image style={styles.image} source={require("../../img/djrain.png")} />
       {list.map((item, i) => (
-   
-        <List title={item.title} />
+      
+
+        <List item={item} navigation={navigation} />
+        
       ))}
 
 
@@ -70,18 +72,18 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#003e95",
     ...StyleSheet.absoluteFillObject,
-    paddingRight: 26,
-    paddingLeft: 26,
+    // paddingRight: 26,
+    // paddingLeft: 26,
   },
   list: {
     backgroundColor: "transparent",
   },
   image: {
-    position: "absolute",
-    width: 390,
+    // position: "absolute",
+    width: '100%',
     height: 750,
-    left: -800,
-    top: 90,
+    // left: -800,
+    // top: 90,
     ...StyleSheet.absoluteFillObject,
   },
   imageSection: {

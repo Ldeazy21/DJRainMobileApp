@@ -1,12 +1,19 @@
 import React from 'react'
+import { TouchableOpacity } from 'react-native';
+import { Touchable } from 'react-native';
 import {View,StyleSheet,Text} from 'react-native'
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
-function List({title}) {
+function List({item,navigation}) {
     return (
     <View style={styles.container}> 
-        <Text style={styles.title}>{title}</Text>   
-        <MaterialCommunityIcons name="greater-than" style={styles.icon} size={15} color='white' />
+    <TouchableOpacity onPress={()=>{
+        navigation.navigate(item.name)
+    }}>
+
+        <Text style={styles.title}>{item.title}</Text> 
+        </TouchableOpacity>  
+        {/* <MaterialCommunityIcons name="greater-than" style={styles.icon} size={15} color='white' /> */}
     </View>
     )
 }
@@ -21,10 +28,11 @@ container:{
     paddingTop:20,
     marginTop:10,
     top: 40,
+    paddingLeft:10
 },
 title:{
     color:'white',
-    fontSize:24,
+    fontSize:20,
     fontWeight:'500'
 },
 icon:{
@@ -32,6 +40,7 @@ icon:{
 },
 image:{
     width: 100,
-    height:100
+    height:100,
+    paddingLeft:10
 }
 })

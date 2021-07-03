@@ -10,6 +10,17 @@ export const AuthContextProvider = ({ children, navigation }) => {
 
     const [linkSent, setLinkSent] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    const [isLoggedIn,setIsLoggedIn] = useState(false)
+
+    useEffect(()=>{
+
+      auth.onAuthStateChanged(authState =>{
+          if(authState){
+              setIsLoggedIn(true)
+          }
+      })
+
+    },[])
   
     // const [song,setSong] = useState(null)
     const [music, setMusic] = useState([])
@@ -211,11 +222,19 @@ export const AuthContextProvider = ({ children, navigation }) => {
             }).catch(error => ToastAndroid.show(error.message))
     }
 
+    const logout = async ()=>{
+        auth.signOut().then(()=>{
+         
+            setIsLoggedIn(false)
+        })
+    }
     return (
         <AuthContext.Provider value={{
             playSong,
             getSelectedSong,
             playing,
+            isLoggedIn,
+            logout,
             setPlaying,
             music,
             //  song , 

@@ -19,11 +19,11 @@ const theme = {
 export default Container = () => {
   return (
     <Provider store={store} theme={theme}>
-      <NavigationContainer>
+       <NavigationContainer> 
         <PaperProvider>
           <App/>
         </PaperProvider>
-      </NavigationContainer>
-    </Provider>
+       </NavigationContainer> 
+     </Provider>
   )
 }

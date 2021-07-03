@@ -12,7 +12,7 @@ function Home({ navigation }) {
   const [showPlayer, setShowPlayer] = useState(false);
 
   const [selectedSong, setSelectedSong] = useState(null)
-  const { song, modalVisible, toggleModal,music } = useContext(AuthContext);
+  const { song, modalVisible, toggleModal,music,logout } = useContext(AuthContext);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -41,7 +41,7 @@ function Home({ navigation }) {
           <TouchableOpacity onPress={() => setShowSearchInput(!showSearchInput)}>
             <MaterialIcons name="search" size={26} color='#003e95' />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={()=>logout()}>
             <MaterialIcons name="settings" size={26} color='#003e95' />
           </TouchableOpacity>
         </View>

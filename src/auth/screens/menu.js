@@ -20,7 +20,7 @@ const Menu = ({ navigation }) => {
     { title: "MIXES",name:'Home' },
     { title: "EVENTS",name:'Events' },
     { title: "PHOTOS",name:'Photos' },
-    { title: "BUY DJ RAIN MERCH" },
+    // { title: "BUY DJ RAIN MERCH" },
     { title: "ARTISTS OF THE MONTH",name:'Spotlight' },
   ];
   useLayoutEffect(() => {

@@ -13,7 +13,7 @@ export const AuthContextProvider = ({ children, navigation }) => {
   
     // const [song,setSong] = useState(null)
     const [music, setMusic] = useState([])
-    const [filteredMusic,setFilteredMusic] = useState([])
+   
     const [songInfo,setSongInfo] = useState(null)
     const [playing,setPlaying] =  useState(false)
 
@@ -84,7 +84,7 @@ export const AuthContextProvider = ({ children, navigation }) => {
     useEffect(() => {
      
         setMusic(data)
-        setFilteredMusic(data)
+        
     }, [])
 
     useLayoutEffect(() => {

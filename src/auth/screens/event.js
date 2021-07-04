@@ -3,6 +3,7 @@ import {View,Text,StyleSheet,Image,TouchableOpacity} from 'react-native'
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import EntypoIcons from "react-native-vector-icons/Entypo";
+
 function Event({navigation,route}) {
 
     useLayoutEffect(()=>{
@@ -17,10 +18,10 @@ function Event({navigation,route}) {
                 <View style={{ marginLeft: 20 }}>
                   <TouchableOpacity
                     onPress={() => {
-                     navigation.toggleDrawer()
+                     navigation.navigate('Events')
                     }}
                   >
-                    <MaterialIcons name="menu" size={26} color='#003e95' />
+                    <MaterialIcons name="arrow-back" size={26} color='#003e95' />
                   </TouchableOpacity>
                 </View>
               ),

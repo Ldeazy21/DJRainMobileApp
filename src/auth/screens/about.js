@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useEffect } from "react";
+import React, { useLayoutEffect, useEffect,useContext } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,15 @@ import {
   ScrollView,
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import AntDesign from 'react-native-vector-icons/AntDesign'
 import { ListItem, Icon } from "react-native-elements";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
 import List from "../../components/List";
+import { AuthContext } from "../Context/AuthContext";
 
 const Menu = ({ navigation }) => {
+  const {logout} = useContext(AuthContext)
   const drawer = createDrawerNavigator();
   const list = [
     { title: "ABOUT DJ RAIN" },
@@ -47,7 +50,7 @@ const Menu = ({ navigation }) => {
              
              
              <TouchableOpacity>
-                <MaterialIcons name="settings" size={26} color='#1A54DC'/>
+                {/* <AntDesign name="logout" size={26} color='#1A54DC'/> */}
               </TouchableOpacity> 
             </View>
           ),

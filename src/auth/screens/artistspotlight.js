@@ -40,7 +40,7 @@ const Menu = ({ navigation }) => {
       headerRight: () => (
         <View style={{ marginRight: 20 }}>
           <TouchableOpacity>
-            <MaterialIcons name="settings" size={26} color='#003e95'/>
+            {/* <MaterialIcons name="settings" size={26} color='#003e95'/> */}
           </TouchableOpacity>
         </View>
       ),

@@ -1,18 +1,20 @@
 import React, { useState, useLayoutEffect, useContext } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native';
 import SongCard from '../../components/SongCard';
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import AntDesign from 'react-native-vector-icons/AntDesign'
 import Player from './player';
 // import MiniPlayer from '../../components/miniPlayer';
-
+import SearchInput from '../../components/Search';
 import { AuthContext } from '../Context/AuthContext';
 import { SafeAreaView } from 'react-native';
 function Home({ navigation }) {
-  const [showSearchInput, setShowSearchInput] = useState(false);
+  // const [showSearchInput, setShowSearchInput] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
 
+  const [searchTerm,setSearchTerm] = useState('')
   const [selectedSong, setSelectedSong] = useState(null)
-  const { song, modalVisible, toggleModal,music,logout } = useContext(AuthContext);
+  const { song, modalVisible, toggleModal,music,logout,showSearchInput,toggleSearch } = useContext(AuthContext);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -38,26 +40,85 @@ function Home({ navigation }) {
       ),
       headerRight: () => (
         <View style={{ marginRight: 20, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => setShowSearchInput(!showSearchInput)}>
+          <TouchableOpacity onPress={()=>{
+            toggleSearch()
+          }}>
             <MaterialIcons name="search" size={26} color='#003e95' />
           </TouchableOpacity>
           <TouchableOpacity onPress={()=>logout()}>
-            <MaterialIcons name="settings" size={26} color='#003e95' />
+           <AntDesign name="logout" size={20} color='#1A54DC'/>
           </TouchableOpacity>
         </View>
       ),
     });
   }, [navigation]);
+//   const handleSearch = (text)=>{
+//     if(text){
+//         const newData =  music.filter((item)=>{
+           
+// const itemData =  item.title ? item.title.toUpperCase()
+// :''.toUpperCase();
+// const textData =  text.toUpperCase()
+// return itemData.indexOf(textData) > -1;
+//         });
+//         setFilteredMusic(newData)
+//         // setMusic(newData)
+//         // setseacrch(text)
+//     }else{
+//         setFilteredMusic(music)
+//     }
+// }
 
 
 
   return (
     <>
     <View style={styles.container}>
+      {showSearchInput &&
+
+<View style={styles.searchContainer}>
+        <View style={{flexDirection:'row',width:'100%',alignItems:'center',padding:20,justifyContent:'space-between'}}>
+
+      <MaterialIcons
+        name="search"
+        size={26}
+        color="#fff"
+        // style={styles.searchIcon}
+      />
+
+      <TextInput 
+      style={styles.search} 
+      placeholder="Seach" 
+      placeholderTextColor="white"
+      onChangeText={(text)=>{
+        setSearchTerm(text)
+      }}
+      />
+      <TouchableOpacity onPress={()=>{
+        toggleSearch()
+      }}>
+
+
+      <MaterialIcons   name="close"
+        size={20}
+        color="#fff"
+        style={styles.searchIcon}/>
+      </TouchableOpacity>
+        </View>
+    </View>
+
+
+      }
       <ScrollView>
 
         {
-          music.map(song => (
+          music.filter((val)=>{
+            if(searchTerm == ""){
+              return val;
+            }else if(val.title.toLowerCase().includes(searchTerm.toLowerCase())){
+              return val;
+            }
+          }).map(song => (
             <SongCard key={song.id} song={song} navigation={navigation} />
           ))
         }
@@ -115,6 +176,9 @@ const styles = StyleSheet.create({
     // paddingRight: 20,
     // paddingTop: 10,
   },
+  searchContainer: {
+    flexDirection: "row",
+  },
   modal: {
     position: 'absolute',
     bottom: 0,
@@ -126,5 +190,15 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: 'lime'
-  }
+  },
+  search: {
+    backgroundColor: "#ffffff21",
+    opacity:1,
+    borderRadius: 5,
+    width: 350,
+    position: "absolute",
+    paddingLeft:50,
+    height:69,
+    color:'white'
+  },
 })

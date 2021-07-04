@@ -11,6 +11,12 @@ export const AuthContextProvider = ({ children, navigation }) => {
     const [linkSent, setLinkSent] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [isLoggedIn,setIsLoggedIn] = useState(false)
+    const [showSearchInput, setShowSearchInput] = useState(false);
+
+    const toggleSearch= ()=>{
+        setShowSearchInput(!showSearchInput)
+        
+      }
 
     useEffect(()=>{
 
@@ -24,7 +30,7 @@ export const AuthContextProvider = ({ children, navigation }) => {
   
     // const [song,setSong] = useState(null)
     const [music, setMusic] = useState([])
-   
+   const [filteredMusic,setFilteredMusic] =  useState([])
     const [songInfo,setSongInfo] = useState(null)
     const [playing,setPlaying] =  useState(false)
 
@@ -82,8 +88,6 @@ export const AuthContextProvider = ({ children, navigation }) => {
 
     const toggleModal = () => {
         setModalVisible(!modalVisible)
-       
-
     }
 
     const getSelectedSong = (data) => {
@@ -97,6 +101,7 @@ export const AuthContextProvider = ({ children, navigation }) => {
         setMusic(data)
         
     }, [])
+
 
     useLayoutEffect(() => {
         TrackPlayer.updateOptions({
@@ -119,16 +124,32 @@ export const AuthContextProvider = ({ children, navigation }) => {
       
     }, [])
 
-    // const handleSearch = (text)=>{
-    //     let = text.toLowerCase()
+    // const handleSearch = (textToSearch)=>{
+    //    let text = textToSearch.toLowerCase()
     //     let results = music.filter((item)=>{
-    //         return item.name.toLowerCase().match(text)
+    //         return item.title.toLowerCase().match(text)
     //     })
-    //     if(!text || text === ''){
-            
-    //     }
+    //   setMusic(results)
+    //   setFilteredMusic(results)
         
     // }
+
+    const handleSearch = (text)=>{
+        if(text){
+            const newData =  music.filter((item)=>{
+               
+ const itemData =  item.title ? item.title.toUpperCase()
+ :''.toUpperCase();
+ const textData =  text.toUpperCase()
+ return itemData.indexOf(textData) > -1;
+            });
+            setFilteredMusic(newData)
+            setMusic(newData)
+            // setseacrch(text)
+        }else{
+            setFilteredMusic(music)
+        }
+    }
 
 
 
@@ -232,7 +253,11 @@ export const AuthContextProvider = ({ children, navigation }) => {
         <AuthContext.Provider value={{
             playSong,
             getSelectedSong,
+            handleSearch,
             playing,
+            toggleModal,
+            showSearchInput,
+            toggleSearch,
             isLoggedIn,
             logout,
             setPlaying,

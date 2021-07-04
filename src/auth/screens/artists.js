@@ -28,7 +28,7 @@ function Spotlight({navigation}) {
                  
                  
                  <TouchableOpacity>
-                    <MaterialIcons name="settings" size={26} color='#1A54DC'/>
+                    {/* <MaterialIcons name="settings" size={26} color='#1A54DC'/> */}
                   </TouchableOpacity> 
                 </View>
               ),

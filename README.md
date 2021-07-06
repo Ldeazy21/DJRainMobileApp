@@ -9,6 +9,9 @@ https://www.figma.com/file/1GcyZjAafXuPALG64pQYGa/DJ-Rain-Mobile-App?node-id=5%3
 
 login email: donnie@gmail.com
 password: 123456789
+<br>
+
+
 iOS
 yarn <br>
 npx pod-install<br>

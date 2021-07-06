@@ -16,6 +16,7 @@ import TrackPlayer from "react-native-track-player";
 import { useTrackPlayerProgress } from 'react-native-track-player/lib/hooks'
 import { AuthContext } from "../Context/AuthContext";
 import Modal from 'react-native-modal'
+import { StatusBar } from "react-native";
 function Player() {
 
   const { modalVisible, toggleModal,songInfo,playing,setPlaying } = useContext(AuthContext)
@@ -72,10 +73,15 @@ function Player() {
 
 
   return (
-    <SafeAreaView>
+    <SafeAreaView >
+    
       <Modal
         isVisible={modalVisible}
-        // deviceHeight={10}
+        
+        animationIn="slideInUp"
+        animationInTiming={300}
+        animationOutTiming={500}
+        animationOut="slideInUp"
         onBackdropPress={() => {
           toggleModal()
         }}
@@ -94,7 +100,9 @@ function Player() {
 
             // width:500
           }}>
-            <TouchableOpacity onPress={() => {
+            <TouchableOpacity
+            
+            onPress={() => {
               toggleModal()
             }}  >
               <SimpleLineIcons name="arrow-down" size={20} color="white" />
@@ -103,7 +111,7 @@ function Player() {
           <Image
             // source={require("../../img/album-arts/death-bed.jpg")}
             source={{ uri: songInfo.artwork }}
-            style={{ width: "100%", height: 320, borderRadius: 5 }}
+            style={{ width: "100%", height: 320, borderRadius: 25,backgroundColor:'transparent' }}
           />
           <Text style={styles.title}>{songInfo.title}</Text>
           <Text style={styles.artist}>By {songInfo.artist}</Text>

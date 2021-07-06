@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useContext } from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, ScrollView,StatusBar, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native';
 import SongCard from '../../components/SongCard';
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -77,7 +77,21 @@ function Home({ navigation }) {
       {showSearchInput &&
 
 <View style={styles.searchContainer}>
-        <View style={{flexDirection:'row',width:'100%',alignItems:'center',padding:20,justifyContent:'space-between'}}>
+        <View style={{flexDirection:'row',
+        width:300,
+        alignItems:'center',
+        padding:20,
+        justifyContent:'space-between',
+      backgroundColor: "#ffffff21",
+    // opacity:1,
+    borderRadius: 5,
+    width: '100%',
+    // position: "absolute",
+    // paddingLeft:50,
+    // height:69,
+    // color:'white'
+        
+        }}>
 
       <MaterialIcons
         name="search"
@@ -88,7 +102,7 @@ function Home({ navigation }) {
 
       <TextInput 
       style={styles.search} 
-      placeholder="Seach" 
+      placeholder="Search" 
       placeholderTextColor="white"
       onChangeText={(text)=>{
         setSearchTerm(text)
@@ -192,10 +206,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'lime'
   },
   search: {
-    backgroundColor: "#ffffff21",
-    opacity:1,
+    // backgroundColor: "#ffffff21",
+    // opacity:1,
     borderRadius: 5,
-    width: 350,
+    width: '100%',
     position: "absolute",
     paddingLeft:50,
     height:69,

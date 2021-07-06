@@ -16,10 +16,10 @@ import List from "../../components/List";
 const Menu = ({ navigation }) => {
   const drawer = createDrawerNavigator();
   const list = [
-    { title: "ABOUT DJ RAIN",name:'About' },
-    { title: "MIXES",name:'Home' },
-    { title: "EVENTS",name:'Events' },
-    { title: "PHOTOS",name:'Photos' },
+    { id:Math.random(),title: "ABOUT DJ RAIN",name:'About' ,},
+    { id:Math.random(),title: "MIXES",name:'Home', },
+    { id:Math.random(),title: "EVENTS",name:'Events', },
+    { id:Math.random(),title: "PHOTOS",name:'Photos', },
     // { title: "BUY DJ RAIN MERCH" },
     { title: "ARTISTS OF THE MONTH",name:'Spotlight' },
   ];
@@ -50,7 +50,7 @@ const Menu = ({ navigation }) => {
       {list.map((item, i) => (
       
 
-        <List item={item} navigation={navigation} />
+        <List item={item} key={i} navigation={navigation} />
         
       ))}
 

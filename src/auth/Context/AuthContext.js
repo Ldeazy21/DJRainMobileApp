@@ -3,6 +3,7 @@ import { ToastAndroid } from 'react-native'
 import { auth, provider } from '../../../Firebase/index'
 import * as firebase from "firebase";
 import TrackPlayer, { STATE_PLAYING } from 'react-native-track-player';
+import { LogBox } from 'react-native';
 
 export const AuthContext = createContext();
 
@@ -104,6 +105,7 @@ export const AuthContextProvider = ({ children, navigation }) => {
 
 
     useLayoutEffect(() => {
+        LogBox.ignoreLogs(['Setting a timer for a long'])
         TrackPlayer.updateOptions({
             stopWithApp: true,
             capabilities: [
@@ -236,6 +238,7 @@ export const AuthContextProvider = ({ children, navigation }) => {
         auth.currentUser.sendEmailVerification()
             .then(() => {
                 setLinkSent(true);
+           
                 setTimeout(() => {
                     navigation.navigate('SignIn')
                     setLinkSent(false)

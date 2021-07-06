@@ -8,6 +8,7 @@ import TrackPlayer from "react-native-track-player";
 function SongCard({ song,navigation }) {
     
 const {getSelectedSong, playSong} =  useContext(AuthContext)
+const [playing,setPlaying] =  useState(false)
     // const sendSong = (song)=>{
     //     getSelectedSong(song)
     // }
@@ -43,7 +44,11 @@ const {getSelectedSong, playSong} =  useContext(AuthContext)
                 </View>
 
                 <View>
-                    <TouchableOpacity>
+                    <TouchableOpacity
+                    onPress={()=>{
+                        playSong(song)
+                    }}
+                    >
 
                         <MaterialCommunityIcons name='play-circle' size={40} color='#003e95' />
                     </TouchableOpacity>
@@ -65,6 +70,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         // marginTop:20,
         borderBottomWidth: .5,
+        borderBottomColor:'#00183b',
 
 
         paddingLeft: 20,

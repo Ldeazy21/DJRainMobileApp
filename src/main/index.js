@@ -15,12 +15,20 @@ const Drawer = createDrawerNavigator();
 const Main = ()=>{
 return(
     <Drawer.Navigator
+    drawerStyle={{
+        backgroundColor:'white',
+        
+        justifyContent:'center',
+        paddingTop:50
+    }}
+   drawerContentOptions={{
+       labelStyle:{
+           color:'#003e95',
+           fontSize:20
+       }
+   }} 
     
-//     drawerContent={(props)=> <Menu {...props}
-    
-//     />
 
-// }
     >
         <Drawer.Screen name="Home"  component={Home}     />
         

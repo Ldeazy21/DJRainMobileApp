@@ -6,14 +6,15 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 
 function List({item,navigation}) {
     return (
-    <View style={styles.container}> 
-    <TouchableOpacity onPress={()=>{
+    <View > 
+    <TouchableOpacity style={styles.container}
+     onPress={()=>{
         navigation.navigate(item.name)
     }}>
 
         <Text style={styles.title}>{item.title}</Text> 
+        <MaterialCommunityIcons name="greater-than" style={styles.icon} size={15} color='white' />
         </TouchableOpacity>  
-        {/* <MaterialCommunityIcons name="greater-than" style={styles.icon} size={15} color='white' /> */}
     </View>
     )
 }
@@ -25,10 +26,11 @@ container:{
     alignItems: 'center',
     flexDirection:'row',
     backgroundColor:'transparent',
+    paddingHorizontal:20,
     paddingTop:20,
     marginTop:10,
-    top: 40,
-    paddingLeft:10
+    // top: 40,
+    // paddingLeft:10
 },
 title:{
     color:'white',

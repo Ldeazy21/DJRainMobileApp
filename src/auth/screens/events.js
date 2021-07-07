@@ -1,9 +1,12 @@
-import React,{useLayoutEffect,useState} from 'react';
+import React,{useContext, useLayoutEffect,useState} from 'react';
 import {View,TouchableOpacity,StyleSheet,FlatList,Text} from 'react-native';
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import EventsList from '../../components/EventsList';
+import { AuthContext } from '../Context/AuthContext';
+import Event from './event';
 
 function Events({navigation}) {
+  const {eventModal} = useContext(AuthContext)
     useLayoutEffect(() => {
         
         navigation.setOptions({ 
@@ -31,7 +34,7 @@ function Events({navigation}) {
              
              
              <TouchableOpacity>
-                <MaterialIcons name="settings" size={26} color='#1A54DC'/>
+                {/* <MaterialIcons name="settings" size={26} color='#1A54DC'/> */}
               </TouchableOpacity> 
             </View>
           ),
@@ -89,7 +92,11 @@ function Events({navigation}) {
         
         />
      
-
+{
+  eventModal && (
+    <Event  />
+  )
+}
 
         </View>
 

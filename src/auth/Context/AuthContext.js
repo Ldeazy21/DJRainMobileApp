@@ -34,7 +34,8 @@ export const AuthContextProvider = ({ children, navigation }) => {
    const [filteredMusic,setFilteredMusic] =  useState([])
     const [songInfo,setSongInfo] = useState(null)
     const [playing,setPlaying] =  useState(false)
-
+const [eventModal,setEventModal] =  useState(false)
+const [eventDetails,setEventDetails] = useState(null)
     const data = [
         {
             title: "Lit Music",
@@ -102,6 +103,12 @@ export const AuthContextProvider = ({ children, navigation }) => {
         setMusic(data)
         
     }, [])
+
+    const toggleEvent =(data)=>{
+        setEventModal(!eventModal)
+        setEventDetails(data)
+    
+    }
 
 
     useLayoutEffect(() => {
@@ -257,6 +264,9 @@ export const AuthContextProvider = ({ children, navigation }) => {
             playSong,
             getSelectedSong,
             handleSearch,
+            toggleEvent,
+            eventDetails,
+            eventModal,
             playing,
             toggleModal,
             showSearchInput,

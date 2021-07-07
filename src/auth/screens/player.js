@@ -9,7 +9,7 @@ import {
   StyleSheet,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import SimpleLineIcons from "react-native-vector-icons/SimpleLineIcons";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
 import music from "../../data";
 import { Slider } from "react-native-elements";
 import TrackPlayer from "react-native-track-player";
@@ -105,7 +105,7 @@ function Player() {
             onPress={() => {
               toggleModal()
             }}  >
-              <SimpleLineIcons name="arrow-down" size={20} color="white" />
+              <FontAwesome name="chevron-down" size={20} color="white" />
             </TouchableOpacity>
           </View>
           <Image

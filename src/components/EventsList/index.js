@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {View,StyleSheet,Text,Image,TouchableOpacity} from 'react-native';
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { Avatar } from "react-native-elements/dist/avatar/Avatar";
+import { AuthContext } from '../../auth/Context/AuthContext';
+import Event from '../../auth/screens/event'
 function EventsList({event,navigation}) {
+    const {toggleEvent, eventModal} = useContext(AuthContext)
     return (
      
         <View >
             <TouchableOpacity style={styles.container} onPress={()=>{
-                navigation.navigate('Event',{event})
+                // navigation.navigate('Event',{event})
+                toggleEvent(event)
             }}>
 
         <View style={{flexDirection:'row',alignItems:'center'}} >
@@ -36,6 +40,7 @@ function EventsList({event,navigation}) {
         </View>
 
 </TouchableOpacity>
+
         </View>
     )
 }

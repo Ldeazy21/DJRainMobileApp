@@ -1,10 +1,10 @@
 import React, { createContext, useState, useEffect, useLayoutEffect } from 'react'
-import { ToastAndroid } from 'react-native'
+// import { Toast } from 'react-native'
 import { auth, provider } from '../../../Firebase/index'
 import * as firebase from "firebase";
 import TrackPlayer, { STATE_PLAYING } from 'react-native-track-player';
 import { LogBox } from 'react-native';
-
+import Toast from 'react-native-simple-toast';
 export const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children, navigation }) => {
@@ -203,13 +203,13 @@ const [eventDetails,setEventDetails] = useState(null)
                 userCredential.user.updateProfile({
                     displayName: username
                 }).then(() => {
-                    alert("Updated Successfuly")
+                    // alert("Updated Successfuly")
                 }).catch(error => alert("Unable to update profile."))
-                ToastAndroid.show("Account created sucessfully.", ToastAndroid.LONG)
+                Toast.show("Account created sucessfully.", Toast.LONG)
                 navigation.navigate('SignIn')
             }).catch(error => {
 
-                ToastAndroid.show(error.message, ToastAndroid.SHORT)
+                Toast.show(error.message, Toast.SHORT)
             })
     }
 
@@ -217,10 +217,10 @@ const [eventDetails,setEventDetails] = useState(null)
        
         auth.signInWithEmailAndPassword(email, password)
             .then(userCredential => {
-                ToastAndroid.show(`Logged in as ${userCredential.user.displayName}`, ToastAndroid.LONG)
+                Toast.show(`Logged in as ${userCredential.user.displayName}`, Toast.LONG)
             })
             .catch(error => {
-                ToastAndroid.show(error.message, ToastAndroid.LONG)
+                Toast.show(error.message, Toast.LONG)
             })
     }
 
@@ -233,10 +233,10 @@ const [eventDetails,setEventDetails] = useState(null)
                     navigation.navigate('SignIn')
                     setLinkSent(false)
                 }, 5000)
-                ToastAndroid.show(`A reset link has been sent to your ${email}`, ToastAndroid.LONG)
+                Toast.show(`A reset link has been sent to your ${email}`, Toast.LONG)
             })
             .catch((error) => {
-                ToastAndroid.show(error.message, ToastAndroid.LONG)
+                Toast.show(error.message, Toast.LONG)
             })
     
     }
@@ -250,7 +250,7 @@ const [eventDetails,setEventDetails] = useState(null)
                     navigation.navigate('SignIn')
                     setLinkSent(false)
                 }, 8000)
-            }).catch(error => ToastAndroid.show(error.message))
+            }).catch(error => Toast.show(error.message))
     }
 
     const logout = async ()=>{

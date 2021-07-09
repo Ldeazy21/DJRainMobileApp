@@ -22,10 +22,10 @@ function Events({navigation}) {
                 <View style={{ marginLeft: 20 }}>
                   <TouchableOpacity
                     onPress={() => {
-                     navigation.toggleDrawer()
+                     navigation.navigate('Home')
                     }}
                   >
-                    <MaterialIcons name="menu" size={26} color='#003e95' />
+                            <MaterialIcons name="arrow-back-ios" size={17} color='#003e95' />
                   </TouchableOpacity>
                 </View>
               ),
@@ -67,8 +67,8 @@ function Events({navigation}) {
     return (
         <View style={styles.container}>
             <View style={styles.switch}>
-                <TouchableOpacity style={styles.switchBtn}  onPress={() =>setBtnActive(!btnActive)}><Text style={{color:'#fff'}}>Upcoming</Text></TouchableOpacity>
-                <TouchableOpacity style={styles.switchBtn} onPress={() =>setBtnActive(!btnActive)}><Text style={{color:'#fff'}}>Past</Text></TouchableOpacity>
+                {/* <TouchableOpacity style={styles.switchBtn}  onPress={() =>setBtnActive(!btnActive)}><Text style={{color:'#fff'}}>Upcoming</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.switchBtn} onPress={() =>setBtnActive(!btnActive)}><Text style={{color:'#fff'}}>Past</Text></TouchableOpacity> */}
             </View>
             <View>
                 <Text style={{fontSize:22,color:'#fff',fontWeight:'600'}}>Latest Events</Text>
@@ -115,8 +115,8 @@ const styles = StyleSheet.create({
     switch:{
         flexDirection:'row',
         justifyContent: 'center',alignItems:'center',
-        marginTop:30,
-        marginBottom:30,
+        marginTop:10,
+        marginBottom:10,
     },
     switchBtn: {
         width:76,

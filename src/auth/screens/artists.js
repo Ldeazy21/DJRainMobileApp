@@ -16,10 +16,10 @@ function Spotlight({navigation}) {
                 <View style={{ marginLeft: 20 }}>
                   <TouchableOpacity
                     onPress={() => {
-                     navigation.toggleDrawer()
+                     navigation.navigate('Home')
                     }}
                   >
-                    <MaterialIcons name="menu" size={26} color='#003e95' />
+                     <MaterialIcons name="arrow-back-ios" size={17} color='#003e95' />
                   </TouchableOpacity>
                 </View>
               ),

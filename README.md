@@ -13,6 +13,10 @@ password: 123456789
 <br>
 
 
+App login
+email: waiswadonnie@gmail.com
+password: 123456789
+
 iOS
 yarn <br>
 npx pod-install<br>

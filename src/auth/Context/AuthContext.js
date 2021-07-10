@@ -35,6 +35,7 @@ export const AuthContextProvider = ({ children, navigation }) => {
     const [songInfo,setSongInfo] = useState(null)
     const [playing,setPlaying] =  useState(false)
 const [eventModal,setEventModal] =  useState(false)
+const [openMiniPlayer,setOpenMiniPlayer] = useState(null)
 const [eventDetails,setEventDetails] = useState(null)
     const data = [
         {
@@ -90,6 +91,10 @@ const [eventDetails,setEventDetails] = useState(null)
 
     const toggleModal = () => {
         setModalVisible(!modalVisible)
+    }
+    
+    const toggleMiniPlayer =(val)=>{
+        setOpenMiniPlayer(val)
     }
 
     const getSelectedSong = (data) => {
@@ -265,6 +270,8 @@ const [eventDetails,setEventDetails] = useState(null)
             getSelectedSong,
             handleSearch,
             toggleEvent,
+            toggleMiniPlayer,
+            openMiniPlayer,
             eventDetails,
             eventModal,
             playing,

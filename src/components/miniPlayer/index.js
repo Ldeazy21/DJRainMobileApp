@@ -19,14 +19,14 @@ import { AuthContext } from "../../auth/Context/AuthContext";
 function MiniPlayer({ song }) {
 
     const { width, height } = Dimensions.get("window");
-    const [playing, setPlaying] = useState(false);
+    const [playing, setPlaying] = useState(true);
     const [title, setTitle] = useState(null);
     const [image, setImage] = useState(null);
     const [artist, setArtist] = useState(null);
 
     const { duration, position } = useTrackPlayerProgress(250)
 
-    const { modalVisible, toggleModal } = useContext(AuthContext)
+    const { modalVisible, toggleModal,songInfo } = useContext(AuthContext)
 
 
     const setUpTrackPlayer = async () => {
@@ -41,103 +41,59 @@ function MiniPlayer({ song }) {
             console.log(e);
         }
     };
-    useLayoutEffect(() => {
-        TrackPlayer.updateOptions({
-            stopWithApp: false,
-            capabilities: [
-                TrackPlayer.CAPABILITY_SEEK_TO,
-                TrackPlayer.CAPABILITY_PLAY,
-                TrackPlayer.CAPABILITY_PAUSE],
-            compactCapabilities: [
-                TrackPlayer.CAPABILITY_PLAY,
-                TrackPlayer.CAPABILITY_PAUSE,
-            ],
-        });
-        setUpTrackPlayer();
-        getTractData();
-        TrackPlayer.play();
-        // setPlaying(true);
-        return () => TrackPlayer.destroy();
-    }, []);
-    useEffect(() => {
-
-    }, [position, duration])
-
-
-
-    const getTractData = async () => {
-        const state = await TrackPlayer.getState();
-        if (state === TrackPlayer.STATE_PLAYING) {
-            console.log("The player is playing");
-        }
-
-        const trackId = await TrackPlayer.getCurrentTrack();
-        const trackObject = await TrackPlayer.getTrack(trackId);
-        setTitle(trackObject.title);
-        setImage(trackObject.artwork);
-        setArtist(trackObject.artist);
-        const duration = (await TrackPlayer.getDuration()) / 60;
-        const position = (await TrackPlayer.getPosition()) / 60;
-        setPosition(Math.round(position));
-        setDuration(Math.round(duration));
-    };
 
     return (
 
 
-        // <View style={styles.container}>
-        <Modal
-            isVisible={modalVisible}
-            // deviceHeight={10}
-        onBackdropPress={()=>{
-            toggleModal()
-        }}
-        onSwipeComplete={()=>{toggleModal()}}
-        swipeDirection="left"
-        >
-            {/* <TouchableWithoutFeedback
-                // onPress={alert("doNNE")}
-                onPress={() => {
+        <View style={styles.container}>
+    
+                <TouchableOpacity
+
+                onPress={()=>{
                     toggleModal()
                 }}
-            > */}
-                <View 
+
                 // style={styles.modal}
                 style={{flex:1}}
                 >
                     <View style={styles.controller}>
-                        <View style={{ flexDirection: 'row', alignItems: "center" }}>
+                        <View style={{ 
+                            flexDirection: 'row', alignItems: "center" }}>
 
                             <Avatar
                                 rounded
-                                source={{ uri: 'https://yt3.ggpht.com/ytc/AAUvwnhdclmrnN0BlBH9oLvp40Ltzu5AZYENcgnPcymuzQ=s900-c-k-c0x00ffffff-no-rj' }}
+                                source={{ uri: songInfo?.artwork }}
                                 size={58}
                             />
-                            <View>
-                                <Text style={styles.title}>Song Name</Text>
-                                <Text style={styles.artist}>Artist name</Text>
+                            <View
+                            style={{
+                                paddingLeft:10
+                            }}
+                            >
+                                <Text style={styles.title}>{songInfo?.title}</Text>
+                                <Text style={styles.artist}>{songInfo?.artist}</Text>
                             </View>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
 
 
-                            <TouchableOpacity
-                                onPress={() => {
-                                    TrackPlayer.skipToPrevious();
-                                    getTractData();
-                                }}
+                            {/* <TouchableOpacity
+                                // onPress={() => {
+                                //     TrackPlayer.skipToPrevious();
+                                //     getTractData();
+                                // }}
                             >
                                 <MaterialCommunityIcons
                                     name="skip-previous"
                                     size={40}
                                     color="white"
                                 />
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                             {!playing ? (
                                 <TouchableOpacity
                                     onPress={() => {
                                         TrackPlayer.play();
-                                        getTractData();
+                                        // getTractData();
                                         setPlaying(true);
                                     }}
                                 >
@@ -153,23 +109,23 @@ function MiniPlayer({ song }) {
                                     <MaterialCommunityIcons name="pause" size={50} color="white" />
                                 </TouchableOpacity>
                             )}
-                            <TouchableOpacity
-                                onPress={() => {
-                                    TrackPlayer.skipToNext();
-                                    getTractData();
-                                }}
+                            {/* <TouchableOpacity
+                                // onPress={() => {
+                                //     TrackPlayer.skipToNext();
+                                //     getTractData();
+                                // }}
                             >
                                 <MaterialCommunityIcons
                                     name="skip-next"
                                     size={40}
                                     color="white"
                                 />
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                         </View>
                     </View>
-                </View>
-            {/* </TouchableWithoutFeedback> */}
-        </Modal>
+                </TouchableOpacity>
+
+        </View>
 
 
 
@@ -179,8 +135,10 @@ function MiniPlayer({ song }) {
 export default MiniPlayer;
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: "#001B40",
-
+     
+        backgroundColor:'black',
+        flex:1,
+        paddingHorizontal:10,
         flexDirection: 'row'
     },
     title: {

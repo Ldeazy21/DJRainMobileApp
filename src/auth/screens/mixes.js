@@ -1,10 +1,10 @@
-import React, { useState, useLayoutEffect, useContext } from 'react';
+import React, { useState, useLayoutEffect, useEffect,useContext } from 'react';
 import { View, Text, TextInput, ScrollView,StatusBar, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native';
 import SongCard from '../../components/SongCard';
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Player from './player';
-// import MiniPlayer from '../../components/miniPlayer';
+import MiniPlayer from '../../components/miniPlayer';
 import SearchInput from '../../components/Search';
 import { AuthContext } from '../Context/AuthContext';
 import { SafeAreaView } from 'react-native';
@@ -14,7 +14,7 @@ function Mixes({ navigation }) {
 
   const [searchTerm,setSearchTerm] = useState('')
   const [selectedSong, setSelectedSong] = useState(null)
-  const { song, modalVisible, toggleModal,music,logout,showSearchInput,toggleSearch } = useContext(AuthContext);
+  const { song, modalVisible, toggleModal,music,logout,showSearchInput,toggleSearch,openMiniPlayer,toggleMiniPlayer } = useContext(AuthContext);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -53,7 +53,10 @@ function Mixes({ navigation }) {
     });
   }, [navigation]);
 
-
+  // useEffect(()=>{
+  //   toggleMiniPlayer()
+  // },[])
+  
 
 
   return (
@@ -122,7 +125,11 @@ function Mixes({ navigation }) {
           ))
         }
       </ScrollView>
-      {/* <MiniPlayer /> */}
+      {openMiniPlayer && (
+
+        <MiniPlayer  />
+      )
+      }
       {/* <Modal
         transparent={true}
         visible={false}
@@ -148,8 +155,10 @@ function Mixes({ navigation }) {
       </Modal> */}
       {
         modalVisible && (
-          
+          <>
         <Player song={song} />
+        {/* <MiniPlayer  /> */}
+        </>
         )
 
       }

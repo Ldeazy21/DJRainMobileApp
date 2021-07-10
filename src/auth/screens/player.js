@@ -19,7 +19,7 @@ import Modal from 'react-native-modal'
 import { StatusBar } from "react-native";
 function Player() {
 
-  const { modalVisible, toggleModal,songInfo,playing,setPlaying } = useContext(AuthContext)
+  const { modalVisible, toggleModal,songInfo,playing,setPlaying,toggleMiniPlayer } = useContext(AuthContext)
   // const [playing, setPlaying] = useState(false);
 
   const [progres, setProgress] = useState(0);
@@ -29,7 +29,9 @@ function Player() {
 
   const { duration, position } = useTrackPlayerProgress(250)
 
-
+useLayoutEffect(()=>{
+  toggleMiniPlayer()
+},[])
 
 
 
@@ -37,6 +39,7 @@ function Player() {
     if (!isSeeking && position && duration) {
       setProgress(position / duration)
     }
+
   }, [position, duration])
   //function called when the user starts sliding
 
@@ -74,7 +77,7 @@ function Player() {
 
   return (
     <SafeAreaView >
-    
+   
       <Modal
         isVisible={modalVisible}
         
@@ -104,6 +107,7 @@ function Player() {
             
             onPress={() => {
               toggleModal()
+              toggleMiniPlayer(true)
             }}  >
               <FontAwesome name="chevron-down" size={20} color="white" />
             </TouchableOpacity>

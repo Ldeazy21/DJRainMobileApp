@@ -72,9 +72,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: .5,
         borderBottomColor:'#00183b',
 
-
-        paddingLeft: 20,
-        paddingRight: 20,
+paddingHorizontal:20,   
         paddingTop: 10,
         paddingBottom: 10,
 

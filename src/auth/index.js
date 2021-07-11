@@ -20,10 +20,10 @@ export default function AuthStackComponent({ navigation }) {
     <AuthContextProvider navigation={navigation}>
       <AuthStack.Navigator>
         <AuthStack.Screen name="Onboarding" component={Onboarding} />
+        <AuthStack.Screen name="Verify" component={Verify} />
         <AuthStack.Screen name="SignIn" component={SignIn} />
         <AuthStack.Screen name="CreateAccount" component={CreateAccount} />
         <AuthStack.Screen name="ResetPassword" component={PasswordReset} />
-        <AuthStack.Screen name="Verify" component={Verify} />
         <AuthStack.Screen name="Home" component={Home} />
       </AuthStack.Navigator>
     </AuthContextProvider>

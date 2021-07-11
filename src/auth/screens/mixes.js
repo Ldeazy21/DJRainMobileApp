@@ -45,9 +45,7 @@ function Mixes({ navigation }) {
           }}>
             <MaterialIcons name="search" size={26} color='#003e95' />
           </TouchableOpacity>
-          <TouchableOpacity onPress={()=>logout()}>
-           <AntDesign name="logout" size={20} color='#1A54DC'/>
-          </TouchableOpacity>
+          
         </View>
       ),
     });

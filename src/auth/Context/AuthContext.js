@@ -22,8 +22,14 @@ export const AuthContextProvider = ({ children, navigation }) => {
     useEffect(()=>{
 
       auth.onAuthStateChanged(authState =>{
-          if(authState){
+          if(authState &&!authState?.emailVerified){
+              
+            //   setIsLoggedIn(true)
+            navigation?.navigate('Verify')
+          }else if(authState && authState?.emailVerified){
               setIsLoggedIn(true)
+          }else{
+              navigation?.navigate('Onboarding')
           }
       })
 
@@ -117,7 +123,7 @@ const [eventDetails,setEventDetails] = useState(null)
 
 
     useLayoutEffect(() => {
-        LogBox.ignoreLogs(['Setting a timer for a long'])
+        LogBox.ignoreLogs(['Setting a timer for a long','Can`t perform a react state update','null is not an object resulting','expected possible'])
         TrackPlayer.updateOptions({
             stopWithApp: true,
             capabilities: [

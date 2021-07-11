@@ -150,13 +150,13 @@ function Photos({navigation}) {
         alignItems:'flex-end',
         paddingTop:30,
         position:'absolute',
-        right:0
+        right:10
        }}
        > 
 
      <MaterialIcons
     
-     name="close-fullscreen" size={30} color='#fff' />
+     name="close" size={30} color='#fff' />
        </TouchableOpacity>
                   </>
                 )}

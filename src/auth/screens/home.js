@@ -309,7 +309,6 @@ const styles = StyleSheet.create({
   imageSection: {
     flexDirection: "column",
     justifyContent: "flex-end",
-    paddingHorizontal:20,
     alignItems: "center",
     bottom: 30,
     flex: 1,

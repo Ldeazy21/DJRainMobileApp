@@ -128,12 +128,34 @@ function Mixes({ navigation }) {
         <MiniPlayer  />
       )
       }
-    
+      {/* <Modal
+        transparent={true}
+        visible={false}
+       
+        animationType="slide"
+      // transparent={true}
+      // onRequestClose={
+        //   toggleModal()
+      // }
+      >
+        <TouchableWithoutFeedback onPress={()=>{
+          toggleModal()
+        }}>
+        <View
+        style={styles.modal}
+
+
+        >
+
+        <MiniPlayer song={song} />
+        </View>
+        </TouchableWithoutFeedback>
+      </Modal> */}
       {
         modalVisible && (
           <>
         <Player song={song} />
-       
+        {/* <MiniPlayer  /> */}
         </>
         )
 
@@ -154,7 +176,11 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#001B40",
     flex:1,
-
+    // ...StyleSheet.absoluteFillObject
+    // minHeight: "100%",
+    // paddingLeft: 20,
+    // paddingRight: 20,
+    // paddingTop: 10,
   },
   searchContainer: {
     flexDirection: "row",

@@ -12,7 +12,6 @@ target 'DJRainMobile' do
     :hermes_enabled => false
   )
 
-  pod 'react-native-simple-toast', :path => '../node_modules/react-native-simple-toast'
 
   target 'DJRainMobileTests' do
     inherit! :complete

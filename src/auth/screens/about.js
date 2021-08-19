@@ -14,7 +14,8 @@ import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
 import List from "../../components/List";
 import { AuthContext } from "../Context/AuthContext";
-
+MaterialIcons.loadFont()
+AntDesign.loadFont()
 const Menu = ({ navigation }) => {
   const {logout} = useContext(AuthContext)
   const drawer = createDrawerNavigator();

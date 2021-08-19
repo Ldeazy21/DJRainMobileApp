@@ -3,7 +3,7 @@ import { TouchableOpacity } from 'react-native';
 import { Touchable } from 'react-native';
 import {View,StyleSheet,Text} from 'react-native'
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
+MaterialCommunityIcons.loadFont();
 function List({item,navigation}) {
     return (
     <View > 

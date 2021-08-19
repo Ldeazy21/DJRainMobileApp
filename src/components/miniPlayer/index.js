@@ -16,6 +16,7 @@ import TrackPlayer from "react-native-track-player";
 import { useTrackPlayerProgress } from 'react-native-track-player/lib/hooks'
 import { Avatar } from "react-native-elements/dist/avatar/Avatar";
 import { AuthContext } from "../../auth/Context/AuthContext";
+MaterialCommunityIcons.loadFont()
 function MiniPlayer({ song }) {
 
     const { width, height } = Dimensions.get("window");

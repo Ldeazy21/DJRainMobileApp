@@ -11,6 +11,7 @@ import { Button } from "react-native-paper";
 import LinearGradient from "react-native-linear-gradient";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { AuthContext } from "../Context/AuthContext";
+MaterialCommunityIcons.loadFont()
 export default function CreateAccount({ navigation }) {
   useLayoutEffect(() => {
     navigation.setOptions({

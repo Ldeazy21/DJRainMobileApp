@@ -2,6 +2,8 @@ import React,{useLayoutEffect} from 'react';
 import {View,Text,Image,StyleSheet,TouchableOpacity} from 'react-native';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+MaterialIcons.loadFont()
+MaterialCommunityIcons.loadFont()
 function Spotlight({navigation}) {
     useLayoutEffect(() => {
         navigation.setOptions({

@@ -5,6 +5,7 @@ import { Avatar } from "react-native-elements/dist/avatar/Avatar";
 import Player from '../../auth/screens/player'
 import { AuthContext } from '../../auth/Context/AuthContext';
 import TrackPlayer from "react-native-track-player";
+MaterialCommunityIcons.loadFont()
 function SongCard({ song,navigation }) {
     
 const {getSelectedSong, playSong} =  useContext(AuthContext)

@@ -17,6 +17,8 @@ import { useTrackPlayerProgress } from 'react-native-track-player/lib/hooks'
 import { AuthContext } from "../Context/AuthContext";
 import Modal from 'react-native-modal'
 import { StatusBar } from "react-native";
+MaterialCommunityIcons.loadFont()
+FontAwesome.loadFont()
 function Player() {
 
   const { modalVisible, toggleModal,songInfo,playing,setPlaying,toggleMiniPlayer } = useContext(AuthContext)

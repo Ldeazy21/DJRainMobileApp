@@ -6,6 +6,9 @@ import EntypoIcons from "react-native-vector-icons/Entypo";
 import Modal from 'react-native-modal'
 import { AuthContext } from '../Context/AuthContext';
 import { SafeAreaView } from 'react-native';
+MaterialIcons.loadFont()
+MaterialCommunityIcons.loadFont()
+EntypoIcons.loadFont()
 function Event() {
 const {eventModal,eventDetails,toggleEvent} = useContext(AuthContext)
     useLayoutEffect(()=>{

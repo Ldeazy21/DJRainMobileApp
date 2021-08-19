@@ -4,6 +4,7 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { Avatar } from "react-native-elements/dist/avatar/Avatar";
 import { AuthContext } from '../../auth/Context/AuthContext';
 import Event from '../../auth/screens/event'
+MaterialIcons.loadFont()
 function EventsList({event,navigation}) {
     const {toggleEvent, eventModal} = useContext(AuthContext)
     return (

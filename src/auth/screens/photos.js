@@ -5,6 +5,7 @@ import {View,Text,FlatList,Image,StyleSheet,TouchableOpacity} from 'react-native
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import Modal from 'react-native-modal'
 import ImageViewer from 'react-native-image-zoom-viewer';
+MaterialIcons.loadFont()
 function Photos({navigation}) {
     useLayoutEffect(() => {
         navigation.setOptions({

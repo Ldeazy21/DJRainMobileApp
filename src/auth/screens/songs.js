@@ -4,6 +4,7 @@ import {View,Text,ScrollView,StyleSheet} from 'react-native';
 import SongCard from '../../components/SongCard';
 import { AuthContext } from '../Context/AuthContext';
 function Songs({navigation}) {
+    
 const {music} = useContext(AuthContext)
    
     return (

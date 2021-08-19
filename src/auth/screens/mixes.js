@@ -2,12 +2,13 @@ import React, { useState, useLayoutEffect, useEffect,useContext } from 'react';
 import { View, Text, TextInput, ScrollView,StatusBar, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native';
 import SongCard from '../../components/SongCard';
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import AntDesign from 'react-native-vector-icons/AntDesign'
+// import AntDesign from 'react-native-vector-icons/AntDesign'
 import Player from './player';
 import MiniPlayer from '../../components/miniPlayer';
 import SearchInput from '../../components/Search';
 import { AuthContext } from '../Context/AuthContext';
 import { SafeAreaView } from 'react-native';
+MaterialIcons.loadFont()
 function Mixes({ navigation }) {
   // const [showSearchInput, setShowSearchInput] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);

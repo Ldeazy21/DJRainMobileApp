@@ -12,7 +12,7 @@ import { ListItem, Icon } from "react-native-elements";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
 import List from "../../components/List";
-
+MaterialIcons.loadFont()
 const Menu = ({ navigation }) => {
   const drawer = createDrawerNavigator();
   const list = [

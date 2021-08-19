@@ -4,7 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Home from "./home";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
+MaterialCommunityIcons.loadFont()
 function Main() {
   const Tab = createBottomTabNavigator();
   return (

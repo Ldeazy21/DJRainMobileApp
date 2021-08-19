@@ -15,7 +15,7 @@ import { AuthContext } from "../../auth/Context/AuthContext";
 
 // import Headphone from '../../img/donnie.svg';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
+MaterialCommunityIcons.loadFont()
 export default function SignIn({ navigation }) {
   useLayoutEffect(() => {
     navigation.setOptions({

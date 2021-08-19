@@ -2,6 +2,7 @@ import React from 'react';
 import {View,TouchableOpacity,StyleSheet,Text} from 'react-native';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { Slider } from 'react-native-elements';
+MaterialCommunityIcons.loadFont()
 function Controller({TrackPlayer}) {
     return (
         <View style={styles.container}>

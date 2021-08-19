@@ -4,7 +4,7 @@ import { Button } from "react-native-paper";
 import LinearGradient from "react-native-linear-gradient";
 import { AuthContext } from "../../auth/Context/AuthContext";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
+MaterialCommunityIcons.loadFont()
 export default function Verify({ navigation }) {
   useLayoutEffect(() => {
     navigation.setOptions({

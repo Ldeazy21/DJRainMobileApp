@@ -6,7 +6,7 @@ import Accessibility from '../../img/accessibility.svg';
 // import Headphone from '../../img/donnie.svg';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { auth } from '../../../Firebase';
-
+MaterialCommunityIcons.loadFont()
 export default function Onboarding({ navigation }) {
   useEffect(()=>{
     auth.onAuthStateChanged(authState =>{

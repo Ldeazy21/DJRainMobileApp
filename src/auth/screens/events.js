@@ -4,7 +4,7 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import EventsList from '../../components/EventsList';
 import { AuthContext } from '../Context/AuthContext';
 import Event from './event';
-
+MaterialIcons.loadFont()
 function Events({navigation}) {
   const {eventModal} = useContext(AuthContext)
     useLayoutEffect(() => {

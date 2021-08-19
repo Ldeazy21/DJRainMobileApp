@@ -2,7 +2,7 @@ import React,{useContext} from "react";
 import { View, StyleSheet, TextInput,TouchableOpacity } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { AuthContext } from "../../auth/Context/AuthContext";
-
+MaterialIcons.loadFont()
 function SearchInput() {
   const {toggleSearch,handleSearch} =  useContext(AuthContext)
   return (

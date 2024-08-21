@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <folly/detail/FileUtilDetail.h>
+#include <folly/detail/FileUtilVectorDetail.h>
 #include <folly/net/NetOps.h>
 #include <folly/portability/Fcntl.h>
 #include <folly/portability/Sockets.h>
@@ -30,11 +31,29 @@
 #include <folly/portability/SysStat.h>
 
 namespace folly {
+namespace {
+iovec getIOVecFor(ByteRange);
+} // namespace
 
 using namespace fileutil_detail;
 
 int openNoInt(const char* name, int flags, mode_t mode) {
-  return int(wrapNoInt(open, name, flags, mode));
+  // Android NDK bionic with FORTIFY has this definition:
+  // https://android.googlesource.com/platform/bionic/+/9349b9e51b/libc/include/bits/fortify/fcntl.h
+  // ```
+  // __BIONIC_ERROR_FUNCTION_VISIBILITY
+  // int open(const char* pathname, int flags, mode_t modes, ...) __overloadable
+  //         __errorattr(__open_too_many_args_error);
+  // ```
+  // This is originally to prevent open() with incorrect parameters.
+  //
+  // However, combined with folly wrapNotInt, template deduction will fail.
+  // In this case, we create a custom lambda to bypass the error.
+  // The solution is referenced from
+  // https://github.com/llvm/llvm-project/commit/0a0e411204a2baa520fd73a8d69b664f98b428ba
+  //
+  auto openWrapper = [&] { return open(name, flags, mode); };
+  return int(wrapNoInt(openWrapper));
 }
 
 static int filterCloseReturn(int r) {
@@ -69,8 +88,8 @@ int dupNoInt(int fd) {
   return int(wrapNoInt(dup, fd));
 }
 
-int dup2NoInt(int oldfd, int newfd) {
-  return int(wrapNoInt(dup2, oldfd, newfd));
+int dup2NoInt(int oldFd, int newFd) {
+  return int(wrapNoInt(dup2, oldFd, newFd));
 }
 
 int fdatasyncNoInt(int fd) {
@@ -147,6 +166,7 @@ ssize_t pwriteFull(int fd, const void* buf, size_t count, off_t offset) {
   return wrapFull(pwrite, fd, const_cast<void*>(buf), count, offset);
 }
 
+#ifndef _WIN32
 ssize_t readvFull(int fd, iovec* iov, int count) {
   return wrapvFull(readv, fd, iov, count);
 }
@@ -162,34 +182,76 @@ ssize_t writevFull(int fd, iovec* iov, int count) {
 ssize_t pwritevFull(int fd, iovec* iov, int count, off_t offset) {
   return wrapvFull(pwritev, fd, iov, count, offset);
 }
+#else // _WIN32
 
-int writeFileAtomicNoThrow(
+// On Windows, the *vFull() functions wrap the simple read/pread/write/pwrite
+// functions.  While folly/portability/SysUio.cpp does define readv() and
+// writev() implementations for Windows, these attempt to lock the file to
+// provide atomicity.  The *vFull() functions do not provide any atomicity
+// guarantees, so we can avoid the locking logic.
+
+ssize_t readvFull(int fd, iovec* iov, int count) {
+  return wrapvFull(read, fd, iov, count);
+}
+
+ssize_t preadvFull(int fd, iovec* iov, int count, off_t offset) {
+  return wrapvFull(pread, fd, iov, count, offset);
+}
+
+ssize_t writevFull(int fd, iovec* iov, int count) {
+  return wrapvFull(write, fd, iov, count);
+}
+
+ssize_t pwritevFull(int fd, iovec* iov, int count, off_t offset) {
+  return wrapvFull(pwrite, fd, iov, count, offset);
+}
+#endif // _WIN32
+
+WriteFileAtomicOptions& WriteFileAtomicOptions::setPermissions(
+    mode_t _permissions) {
+  permissions = _permissions;
+  return *this;
+}
+
+WriteFileAtomicOptions& WriteFileAtomicOptions::setSyncType(
+    SyncType _syncType) {
+  syncType = _syncType;
+  return *this;
+}
+
+WriteFileAtomicOptions& WriteFileAtomicOptions::setTemporaryDirectory(
+    std::string _temporaryDirectory) {
+  temporaryDirectory = std::move(_temporaryDirectory);
+  return *this;
+}
+
+namespace {
+void throwIfWriteFileAtomicFailed(
+    StringPiece function, StringPiece filename, std::int64_t rc) {
+  if (rc != 0) {
+    auto msg =
+        std::string{function} + "() failed to update " + std::string{filename};
+    throw std::system_error(rc, std::generic_category(), msg);
+  }
+}
+
+// We write the data to a temporary file name first, then atomically rename
+// it into place.
+//
+// If SyncType::WITH_SYNC is used, this ensures that the file contents will
+// always be valid, even if we crash or are killed partway through writing out
+// data.
+int writeFileAtomicNoThrowImpl(
     StringPiece filename,
     iovec* iov,
     int count,
-    mode_t permissions) {
-  // We write the data to a temporary file name first, then atomically rename
-  // it into place.  This ensures that the file contents will always be valid,
-  // even if we crash or are killed partway through writing out data.
-  //
-  // Create a buffer that will contain two things:
-  // - A nul-terminated version of the filename
-  // - The temporary file name
-  std::vector<char> pathBuffer;
-  // Note that we have to explicitly pass in the size here to make
-  // sure the nul byte gets included in the data.
-  constexpr folly::StringPiece suffix(".XXXXXX\0", 8);
-  pathBuffer.resize((2 * filename.size()) + 1 + suffix.size());
-  // Copy in the filename and then a nul terminator
-  memcpy(pathBuffer.data(), filename.data(), filename.size());
-  pathBuffer[filename.size()] = '\0';
-  const char* const filenameCStr = pathBuffer.data();
-  // Now prepare the temporary path template
-  char* const tempPath = pathBuffer.data() + filename.size() + 1;
-  memcpy(tempPath, filename.data(), filename.size());
-  memcpy(tempPath + filename.size(), suffix.data(), suffix.size());
+    const WriteFileAtomicOptions& options) {
+  // create a null-terminated version of the filename
+  auto filePathString = std::string{filename};
+  auto temporaryFilePathString = fileutil_detail::getTemporaryFilePathString(
+      filePathString, options.temporaryDirectory);
 
-  auto tmpFD = mkstemp(tempPath);
+  auto tmpFD = mkstemp(const_cast<char*>(temporaryFilePathString.data()));
   if (tmpFD == -1) {
     return errno;
   }
@@ -199,7 +261,7 @@ int writeFileAtomicNoThrow(
       close(tmpFD);
     }
     if (!success) {
-      unlink(tempPath);
+      unlink(temporaryFilePathString.c_str());
     }
   };
 
@@ -208,9 +270,18 @@ int writeFileAtomicNoThrow(
     return errno;
   }
 
-  rc = fchmod(tmpFD, permissions);
+  rc = fchmod(tmpFD, options.permissions);
   if (rc == -1) {
     return errno;
+  }
+
+  // To guarantee atomicity across power failues on POSIX file systems,
+  // the temporary file must be explicitly sync'ed before the rename.
+  if (options.syncType == SyncType::WITH_SYNC) {
+    rc = fsyncNoInt(tmpFD);
+    if (rc == -1) {
+      return errno;
+    }
   }
 
   // Close the file before renaming to make sure all data has
@@ -221,38 +292,87 @@ int writeFileAtomicNoThrow(
     return errno;
   }
 
-  rc = rename(tempPath, filenameCStr);
+  rc = rename(temporaryFilePathString.c_str(), filePathString.c_str());
   if (rc == -1) {
     return errno;
   }
   success = true;
   return 0;
 }
+} // namespace
+
+int writeFileAtomicNoThrow(
+    StringPiece filename,
+    iovec* iov,
+    int count,
+    mode_t permissions,
+    SyncType syncType) {
+  return writeFileAtomicNoThrowImpl(
+      filename,
+      iov,
+      count,
+      WriteFileAtomicOptions{}
+          .setPermissions(permissions)
+          .setSyncType(syncType));
+}
+
+int writeFileAtomicNoThrow(
+    StringPiece filename,
+    StringPiece data,
+    const WriteFileAtomicOptions& options) {
+  auto iov = getIOVecFor(ByteRange{data});
+  return writeFileAtomicNoThrowImpl(filename, &iov, 1, options);
+}
 
 void writeFileAtomic(
     StringPiece filename,
     iovec* iov,
     int count,
-    mode_t permissions) {
-  auto rc = writeFileAtomicNoThrow(filename, iov, count, permissions);
-  if (rc != 0) {
-    auto msg = std::string(__func__) + "() failed to update " + filename.str();
-    throw std::system_error(rc, std::generic_category(), msg);
-  }
+    mode_t permissions,
+    SyncType syncType) {
+  auto rc = writeFileAtomicNoThrowImpl(
+      filename,
+      iov,
+      count,
+      WriteFileAtomicOptions{}
+          .setPermissions(permissions)
+          .setSyncType(syncType));
+  throwIfWriteFileAtomicFailed(__func__, filename, rc);
 }
 
-void writeFileAtomic(StringPiece filename, ByteRange data, mode_t permissions) {
-  iovec iov;
-  iov.iov_base = const_cast<unsigned char*>(data.data());
-  iov.iov_len = data.size();
-  writeFileAtomic(filename, &iov, 1, permissions);
+void writeFileAtomic(
+    StringPiece filename,
+    ByteRange data,
+    mode_t permissions,
+    SyncType syncType) {
+  auto iov = getIOVecFor(data);
+  writeFileAtomic(filename, &iov, 1, permissions, syncType);
 }
 
 void writeFileAtomic(
     StringPiece filename,
     StringPiece data,
-    mode_t permissions) {
-  writeFileAtomic(filename, ByteRange(data), permissions);
+    mode_t permissions,
+    SyncType syncType) {
+  writeFileAtomic(filename, ByteRange(data), permissions, syncType);
 }
 
+void writeFileAtomic(
+    StringPiece filename,
+    StringPiece data,
+    const WriteFileAtomicOptions& options) {
+  auto iov = getIOVecFor(ByteRange{data});
+  auto rc = writeFileAtomicNoThrowImpl(filename, &iov, 1, options);
+
+  throwIfWriteFileAtomicFailed(__func__, filename, rc);
+}
+
+namespace {
+iovec getIOVecFor(ByteRange byteRange) {
+  iovec iov;
+  iov.iov_base = const_cast<unsigned char*>(byteRange.data());
+  iov.iov_len = byteRange.size();
+  return iov;
+}
+} // namespace
 } // namespace folly

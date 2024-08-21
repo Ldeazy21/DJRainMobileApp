@@ -1,4 +1,7 @@
-import * as firebase from "firebase";
+import firebase from "firebase/compat/app";
+import "firebase/compat/firestore";
+import "firebase/compat/auth";
+import "firebase/compat/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyByw68Solhwl2JzGnVn2dfqa9WpqQe3vxI",
@@ -10,18 +13,16 @@ const firebaseConfig = {
   measurementId: "G-7LMVS0RQDM",
 };
 
-let app;
-let provider;
-if (firebase.default.apps.length === 0) {
-  app = firebase.default.initializeApp(firebaseConfig);
-  
+if (!firebase.apps.length) {
+  console.log("Firebase Initialize");
+  firebase.initializeApp(firebaseConfig);
 } else {
-  app = firebase.default.app();
+  console.log("Firebase Reuse");
 }
 
-
+const app = firebase.app();
 const db = app.firestore();
 const auth = app.auth();
 const storage = app.storage();
 
-export { db, auth, storage, provider };
+export { db, auth, storage };

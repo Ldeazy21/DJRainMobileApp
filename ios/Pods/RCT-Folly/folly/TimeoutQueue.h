@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,12 +84,8 @@ class TimeoutQueue {
    * Return the time that the next event will be due (same as
    * nextExpiration(), below)
    */
-  int64_t runOnce(int64_t now) {
-    return runInternal(now, true);
-  }
-  int64_t runLoop(int64_t now) {
-    return runInternal(now, false);
-  }
+  int64_t runOnce(int64_t now) { return runInternal(now, true); }
+  int64_t runLoop(int64_t now) { return runInternal(now, false); }
 
   /**
    * Return the time that the next event will be due.

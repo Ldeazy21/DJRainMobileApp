@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,10 +38,18 @@
 #define FOLLY_F14_VECTOR_INTRINSICS_AVAILABLE 0
 #endif
 
-#if FOLLY_SSE_PREREQ(4, 2) || __ARM_FEATURE_CRC32
+#if FOLLY_SSE_PREREQ(4, 2) || FOLLY_ARM_FEATURE_CRC32
 #define FOLLY_F14_CRC_INTRINSIC_AVAILABLE 1
 #else
 #define FOLLY_F14_CRC_INTRINSIC_AVAILABLE 0
+#endif
+
+// The F14 extension eraseInto is only available in fallback mode for
+// c++17 or later, because it relies on unordered_map::extract.
+#if FOLLY_F14_VECTOR_INTRINSICS_AVAILABLE || __cplusplus >= 201703L
+#define FOLLY_F14_ERASE_INTO_AVAILABLE 1
+#else
+#define FOLLY_F14_ERASE_INTO_AVAILABLE 0
 #endif
 
 namespace folly {

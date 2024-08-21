@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 #pragma once
+
+#include <vector>
 
 #include <folly/Expected.h>
 #include <folly/Optional.h>
@@ -77,14 +79,12 @@ class json_patch {
     Optional<json_pointer> from;
     Optional<dynamic> value;
     friend bool operator==(
-        patch_operation const& lhs,
-        patch_operation const& rhs) {
+        patch_operation const& lhs, patch_operation const& rhs) {
       return lhs.op_code == rhs.op_code && lhs.path == rhs.path &&
           lhs.from == rhs.from && lhs.value == rhs.value;
     }
     friend bool operator!=(
-        patch_operation const& lhs,
-        patch_operation const& rhs) {
+        patch_operation const& lhs, patch_operation const& rhs) {
       return !(lhs == rhs);
     }
   };
@@ -92,7 +92,7 @@ class json_patch {
   json_patch() = default;
   ~json_patch() = default;
 
-  static folly::Expected<json_patch, parse_error> try_parse(
+  static Expected<json_patch, parse_error> try_parse(
       dynamic const& obj) noexcept;
 
   std::vector<patch_operation> const& ops() const;
@@ -117,7 +117,7 @@ class json_patch {
    * Mutate supplied object in accordance with patch operations. Leaves
    * object in partially modified state if one of the operations fails.
    */
-  Expected<Unit, patch_application_error> apply(folly::dynamic& obj);
+  Expected<Unit, patch_application_error> apply(dynamic& obj) const;
 
  private:
   std::vector<patch_operation> ops_;

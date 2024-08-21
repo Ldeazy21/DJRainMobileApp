@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,38 @@
 #include <cstdint>
 
 #include <folly/Portability.h>
+#include <folly/Traits.h>
 
 namespace folly {
+
+//  register_pass_max_size
+//
+//  The platform-specific maximum size of a value which may be passed by-value
+//  in registers.
+//
+//  According to each platform ABI, trivially-copyable types up to this maximum
+//  size may, if the stars align, be passed by-value in registers rather than
+//  implicitly by-reference to stack copies.
+//
+//  Approximate. Accuracy is not promised.
+constexpr std::size_t register_pass_max_size = kMscVer ? 8u : 16u;
+
+//  register_pass_v
+//
+//  Whether a value may be passed in a register.
+//
+//  Trivially-copyable values up to register_pass_max_size in width may be
+//  passed by-value in registers rather than implicitly by-reference to stack
+//  copies.
+//
+//  Approximate. Accuracy is not promised.
+template <typename T>
+constexpr bool is_register_pass_v =
+    (sizeof(T) <= register_pass_max_size) && is_trivially_copyable_v<T>;
+template <typename T>
+constexpr bool is_register_pass_v<T&> = true;
+template <typename T>
+constexpr bool is_register_pass_v<T&&> = true;
 
 //  has_extended_alignment
 //
@@ -120,7 +150,7 @@ struct alignas(max_align_v) max_align_t {};
 //
 //  mimic: std::hardware_destructive_interference_size, C++17
 constexpr std::size_t hardware_destructive_interference_size =
-    kIsArchArm ? 64 : 128;
+    (kIsArchArm || kIsArchS390X) ? 64 : 128;
 static_assert(hardware_destructive_interference_size >= max_align_v, "math?");
 
 //  Memory locations within the same cache line are subject to constructive

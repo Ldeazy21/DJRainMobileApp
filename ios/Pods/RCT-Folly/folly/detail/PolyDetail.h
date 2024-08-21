@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include <typeinfo>
 #include <utility>
 
+#include <folly/PolyException.h>
 #include <folly/Portability.h>
 #include <folly/Traits.h>
 #include <folly/Utility.h>
@@ -30,8 +31,6 @@
 #include <folly/functional/Invoke.h>
 #include <folly/lang/Exception.h>
 #include <folly/lang/StaticConst.h>
-
-#include <folly/PolyException.h>
 
 #if defined(__cpp_template_auto) || \
     defined(__cpp_nontype_template_parameter_auto)
@@ -311,7 +310,7 @@ using SubsumptionsOf = TypeReverseUnique<_t<SubsumptionsOf_<I>>>;
 
 struct Bottom {
   template <class T>
-  [[noreturn]] /* implicit */ operator T &&() const {
+  [[noreturn]] /* implicit */ operator T&&() const {
     std::terminate();
   }
 };
@@ -371,9 +370,7 @@ struct Data {
   Data() = default;
   // Suppress compiler-generated copy ops to not copy anything:
   Data(Data const&) {}
-  Data& operator=(Data const&) {
-    return *this;
-  }
+  Data& operator=(Data const&) { return *this; }
   union {
     void* pobj_ = nullptr;
     std::aligned_storage_t<sizeof(double[2])> buff_;
@@ -456,9 +453,7 @@ struct ThrowThunk {
   template <class R, class... Args>
   constexpr /* implicit */ operator FnPtr<R, Args...>() const noexcept {
     struct _ {
-      static R call(Args...) {
-        throw_exception<BadPolyAccess>();
-      }
+      static R call(Args...) { throw_exception<BadPolyAccess>(); }
     };
     return &_::call;
   }
@@ -573,7 +568,7 @@ template <
 struct VTable;
 
 template <class T, FOLLY_AUTO User, class I>
-inline constexpr ThunkFn<T, User, I> thunk() noexcept {
+inline constexpr ThunkFn<T, User, I> thunk_() noexcept {
   return ThunkFn<T, User, I>{};
 }
 
@@ -726,7 +721,7 @@ struct VTable<I, PolyMembers<Arch...>, TypeList<S...>>
   template <class T, FOLLY_AUTO... User>
   constexpr VTable(Type<T>, PolyMembers<User...>) noexcept
       : BasePtr<S>{vtableFor<S, T>()}...,
-        std::tuple<SignatureOf<Arch, I>...>{thunk<T, User, I>()...},
+        std::tuple<SignatureOf<Arch, I>...>{thunk_<T, User, I>()...},
         state_{inSitu<T>() ? State::eInSitu : State::eOnHeap},
         ops_{getOps<I, T>()} {}
 
@@ -858,12 +853,8 @@ struct PolyRoot : private PolyBase, private Data {
   using _polyInterface_ = I;
 
  private:
-  PolyRoot& _polyRoot_() noexcept {
-    return *this;
-  }
-  PolyRoot const& _polyRoot_() const noexcept {
-    return *this;
-  }
+  PolyRoot& _polyRoot_() noexcept { return *this; }
+  PolyRoot const& _polyRoot_() const noexcept { return *this; }
   VTable<std::decay_t<I>> const* vptr_ = vtable<std::decay_t<I>>();
 };
 
@@ -887,7 +878,7 @@ struct Sig {
   }
 };
 
-// A functon type with no arguments means the user is trying to disambiguate
+// A function type with no arguments means the user is trying to disambiguate
 // a member function pointer.
 template <class R>
 struct Sig<R()> : Sig<R() const> {
@@ -909,9 +900,7 @@ struct SigImpl : Sig<R(As...) const> {
   constexpr Fun T::*operator()(Fun T::*t) const noexcept {
     return t;
   }
-  constexpr Fun* operator()(Fun* t) const noexcept {
-    return t;
-  }
+  constexpr Fun* operator()(Fun* t) const noexcept { return t; }
   template <class F>
   constexpr F* operator()(F* t) const noexcept {
     return t;
@@ -935,8 +924,24 @@ struct Sig<R(A&, As...)> : SigImpl<R, A&, As...> {
   }
 };
 
+template <bool>
+struct ModelsInterfaceFalse0_;
+template <>
+struct ModelsInterfaceFalse0_<false> {
+  template <typename... T>
+  using apply = bool_constant<(!sizeof(T) || ...)>;
+};
+template <>
+struct ModelsInterfaceFalse0_<true> {
+  template <typename...>
+  using apply = std::false_type;
+};
+template <typename... T>
+using ModelsInterfaceFalse_ = typename ModelsInterfaceFalse0_<(
+    std::is_function_v<remove_cvref_t<T>> || ...)>::template apply<T...>;
+
 template <class T, class I, class = void>
-struct ModelsInterface2_ : std::false_type {};
+struct ModelsInterface2_ : ModelsInterfaceFalse_<T, I> {};
 
 template <class T, class I>
 struct ModelsInterface2_<
@@ -948,7 +953,7 @@ struct ModelsInterface2_<
         MembersOf<std::decay_t<I>, std::decay_t<T>>>> : std::true_type {};
 
 template <class T, class I, class = void>
-struct ModelsInterface_ : std::false_type {};
+struct ModelsInterface_ : ModelsInterfaceFalse_<T, I> {};
 
 template <class T, class I>
 struct ModelsInterface_<

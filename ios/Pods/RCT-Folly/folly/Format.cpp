@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 
 #include <folly/ConstexprMath.h>
 #include <folly/CppAttributes.h>
+#include <folly/Portability.h>
 #include <folly/container/Array.h>
 
 #include <double-conversion/double-conversion.h>
@@ -96,9 +97,7 @@ FOLLY_STORAGE_CONSTEXPR decltype(formatBinary) formatBinary =
 using namespace folly::detail;
 
 void FormatValue<double>::formatHelper(
-    fbstring& piece,
-    int& prefixLen,
-    FormatArg& arg) const {
+    fbstring& piece, int& prefixLen, FormatArg& arg) const {
   using ::double_conversion::DoubleToStringConverter;
   using ::double_conversion::StringBuilder;
 
@@ -140,7 +139,7 @@ void FormatValue<double>::formatHelper(
     default:
       plusSign = '\0';
       break;
-  };
+  }
 
   auto flags = DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN |
       (arg.trailingDot ? DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT
@@ -428,6 +427,8 @@ void insertThousandsGroupingUnsafe(char* start_buffer, char** end_buffer) {
 FormatKeyNotFoundException::FormatKeyNotFoundException(StringPiece key)
     : std::out_of_range(kMessagePrefix.str() + key.str()) {}
 
+#if FOLLY_CPLUSPLUS < 201703L
 constexpr StringPiece const FormatKeyNotFoundException::kMessagePrefix;
+#endif
 
 } // namespace folly

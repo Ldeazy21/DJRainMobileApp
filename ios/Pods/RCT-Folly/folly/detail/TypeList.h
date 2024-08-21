@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,9 +102,7 @@ struct TypeList {
   /**
    * \return the number of types in this list.
    */
-  static constexpr std::size_t size() noexcept {
-    return sizeof...(Ts);
-  }
+  static constexpr std::size_t size() noexcept { return sizeof...(Ts); }
 
   /**
    * This list of types is also a metafunction class that accepts another

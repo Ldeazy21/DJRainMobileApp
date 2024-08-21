@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,27 @@
 #include <type_traits>
 
 #include <folly/Portability.h>
+#include <folly/lang/CArray.h>
 
 namespace folly {
 
 namespace detail {
 
 template <std::size_t S>
-struct pretty_carray {
-  char data[S];
-};
+using pretty_carray = c_array<char, S>;
+
+static constexpr char* pretty_carray_copy(
+    char* dest, const char* src, std::size_t n) {
+  for (std::size_t i = 0; i < n; ++i) {
+    dest[i] = src[i];
+  }
+  return dest + n;
+}
 
 template <std::size_t S>
 static constexpr pretty_carray<S> pretty_carray_from(char const (&in)[S]) {
   pretty_carray<S> out{};
-  for (std::size_t i = 0; i < S; ++i) {
-    out.data[i] = in[i];
-  }
+  pretty_carray_copy(out.data, in, S);
   return out;
 }
 
@@ -51,8 +56,7 @@ static constexpr To pretty_info_to(pretty_info info, char const (&name)[S]) {
 
 template <std::size_t S>
 static constexpr std::size_t pretty_lfind(
-    char const (&haystack)[S],
-    char const needle) {
+    char const (&haystack)[S], char const needle) {
   for (std::size_t i = 0; i < S - 1; ++i) {
     if (haystack[i] == needle) {
       return i;
@@ -63,8 +67,7 @@ static constexpr std::size_t pretty_lfind(
 
 template <std::size_t S>
 static constexpr std::size_t pretty_rfind(
-    char const (&haystack)[S],
-    char const needle) {
+    char const (&haystack)[S], char const needle) {
   for (std::size_t i = S; i != 0; --i) {
     if (haystack[i - 1] == needle) {
       return i - 1;
@@ -97,8 +100,7 @@ static constexpr auto pretty_raw(pretty_tag_gcc) {
 
 template <std::size_t S>
 static constexpr pretty_info pretty_parse(
-    pretty_tag_msc,
-    char const (&name)[S]) {
+    pretty_tag_msc, char const (&name)[S]) {
   //  void __cdecl folly::detail::pretty_raw<{...}>(
   //      folly::detail::pretty_tag_msc)
   auto const la = pretty_lfind(name, '<');
@@ -108,8 +110,7 @@ static constexpr pretty_info pretty_parse(
 
 template <std::size_t S>
 static constexpr pretty_info pretty_parse(
-    pretty_tag_gcc,
-    char const (&name)[S]) {
+    pretty_tag_gcc, char const (&name)[S]) {
   //  void folly::detail::pretty_raw(
   //      folly::detail::pretty_tag_gcc) [T = {...}]
   auto const eq = pretty_lfind(name, '=');
@@ -128,18 +129,23 @@ struct pretty_name_zarray {
   static constexpr auto size = info.e - info.b;
   static constexpr auto zarray_() {
     pretty_carray<size + 1> data{};
-    for (std::size_t i = 0; i < size; ++i) {
-      data.data[i] = raw.data[info.b + i];
-    }
+    pretty_carray_copy(data.data, raw.data + info.b, size);
     data.data[size] = 0;
     return data;
   }
   static constexpr pretty_carray<size + 1> zarray = zarray_();
 };
 
+#if FOLLY_CPLUSPLUS < 201703L
 template <typename T, typename Tag>
 constexpr pretty_carray<pretty_name_zarray<T, Tag>::size + 1>
     pretty_name_zarray<T, Tag>::zarray;
+#endif
+
+template <typename T>
+constexpr const auto& pretty_name_carray() {
+  return detail::pretty_name_zarray<T, detail::pretty_default_tag>::zarray;
+}
 
 } // namespace detail
 
@@ -153,7 +159,7 @@ constexpr pretty_carray<pretty_name_zarray<T, Tag>::size + 1>
 //  present in the type name as it would be symbolized.
 template <typename T>
 constexpr char const* pretty_name() {
-  return detail::pretty_name_zarray<T, detail::pretty_default_tag>::zarray.data;
+  return detail::pretty_name_carray<T>().data;
 }
 
 } // namespace folly

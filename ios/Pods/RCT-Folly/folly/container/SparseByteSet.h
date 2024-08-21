@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,23 @@
 
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 
-#include <glog/logging.h>
+#include <folly/CPortability.h>
 
 namespace folly {
 
 /***
  *  SparseByteSet
  *
- *  A special-purpose data structure representing an insert-only set of bytes.
+ *  A special-purpose data structure representing a set of bytes.
  *  May have better performance than std::bitset<256>, depending on workload.
  *
  *  Operations:
  *  - add(byte)
  *  - contains(byte)
+ *  - clear()
  *
  *  Performance:
  *  - The entire capacity of the set is inline; the set never allocates.
@@ -61,7 +63,7 @@ class SparseByteSet {
   inline bool add(uint8_t i) {
     bool r = !contains(i);
     if (r) {
-      DCHECK_LT(size_, kCapacity);
+      assert(size_ < kCapacity);
       dense_[size_] = i;
       sparse_[i] = uint8_t(size_);
       size_++;
@@ -74,9 +76,16 @@ class SparseByteSet {
    *
    *  O(1), non-amortized.
    */
-  inline bool contains(uint8_t i) const {
+  inline bool contains(uint8_t i) const FOLLY_DISABLE_MEMORY_SANITIZER {
     return sparse_[i] < size_ && dense_[sparse_[i]] == i;
   }
+
+  /***
+   *  clear()
+   *
+   *  O(1), non-amortized.
+   */
+  inline void clear() { size_ = 0; }
 
  private:
   uint16_t size_; // can't use uint8_t because it would overflow if all

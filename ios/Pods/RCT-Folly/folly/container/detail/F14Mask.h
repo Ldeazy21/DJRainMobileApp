@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,9 +75,7 @@ class SparseMaskIter {
   explicit SparseMaskIter(MaskType mask)
       : interleavedMask_{static_cast<uint32_t>(((mask >> 32) << 2) | mask)} {}
 
-  bool hasNext() {
-    return interleavedMask_ != 0;
-  }
+  bool hasNext() { return interleavedMask_ != 0; }
 
   unsigned next() {
     FOLLY_SAFE_DCHECK(hasNext(), "");
@@ -101,7 +99,7 @@ class DenseMaskIter {
       count_ = 0;
     } else {
       count_ = popcount(static_cast<uint32_t>(((mask >> 32) << 2) | mask));
-      if (LIKELY((mask & 1) != 0)) {
+      if (FOLLY_LIKELY((mask & 1) != 0)) {
         index_ = 0;
       } else {
         index_ = findFirstSetNonZero(mask) / kMaskSpacing;
@@ -110,9 +108,7 @@ class DenseMaskIter {
     }
   }
 
-  bool hasNext() {
-    return count_ > 0;
-  }
+  bool hasNext() { return count_ > 0; }
 
   unsigned next() {
     auto rv = index_;
@@ -135,9 +131,7 @@ class SparseMaskIter {
  public:
   explicit SparseMaskIter(MaskType mask) : mask_{mask} {}
 
-  bool hasNext() {
-    return mask_ != 0;
-  }
+  bool hasNext() { return mask_ != 0; }
 
   unsigned next() {
     FOLLY_SAFE_DCHECK(hasNext(), "");
@@ -155,13 +149,11 @@ class DenseMaskIter {
  public:
   explicit DenseMaskIter(uint8_t const*, MaskType mask) : mask_{mask} {}
 
-  bool hasNext() {
-    return mask_ != 0;
-  }
+  bool hasNext() { return mask_ != 0; }
 
   unsigned next() {
     FOLLY_SAFE_DCHECK(hasNext(), "");
-    if (LIKELY((mask_ & 1) != 0)) {
+    if (FOLLY_LIKELY((mask_ & 1) != 0)) {
       mask_ >>= kMaskSpacing;
       return index_++;
     } else {
@@ -188,9 +180,7 @@ class MaskRangeIter {
     mask_ = mask * ((1 << kMaskSpacing) - 1);
   }
 
-  bool hasNext() {
-    return mask_ != 0;
-  }
+  bool hasNext() { return mask_ != 0; }
 
   std::pair<unsigned, unsigned> next() {
     FOLLY_SAFE_DCHECK(hasNext(), "");
@@ -212,9 +202,7 @@ class LastOccupiedInMask {
  public:
   explicit LastOccupiedInMask(MaskType mask) : mask_{mask} {}
 
-  bool hasIndex() const {
-    return mask_ != 0;
-  }
+  bool hasIndex() const { return mask_ != 0; }
 
   unsigned index() const {
     assume(mask_ != 0);
@@ -231,9 +219,7 @@ class FirstEmptyInMask {
  public:
   explicit FirstEmptyInMask(MaskType mask) : mask_{mask} {}
 
-  bool hasIndex() const {
-    return mask_ != 0;
-  }
+  bool hasIndex() const { return mask_ != 0; }
 
   unsigned index() const {
     FOLLY_SAFE_DCHECK(mask_ != 0, "");

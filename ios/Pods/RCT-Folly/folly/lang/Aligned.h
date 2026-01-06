@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,24 +73,12 @@ class aligned {
     return *this;
   }
 
-  T* get() noexcept {
-    return &value_;
-  }
-  T const* get() const noexcept {
-    return &value_;
-  }
-  T* operator->() noexcept {
-    return &value_;
-  }
-  T const* operator->() const noexcept {
-    return &value_;
-  }
-  T& operator*() noexcept {
-    return value_;
-  }
-  T const& operator*() const noexcept {
-    return value_;
-  }
+  T* get() noexcept { return &value_; }
+  T const* get() const noexcept { return &value_; }
+  T* operator->() noexcept { return &value_; }
+  T const* operator->() const noexcept { return &value_; }
+  T& operator*() noexcept { return value_; }
+  T const& operator*() const noexcept { return value_; }
 
  private:
   alignas(Align) T value_;

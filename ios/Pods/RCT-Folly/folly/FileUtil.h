@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ int openNoInt(const char* name, int flags, mode_t mode = 0666);
 int closeNoInt(int fd);
 int closeNoInt(NetworkSocket fd);
 int dupNoInt(int fd);
-int dup2NoInt(int oldfd, int newfd);
+int dup2NoInt(int oldFd, int newFd);
 int fsyncNoInt(int fd);
 int fdatasyncNoInt(int fd);
 int ftruncateNoInt(int fd, off_t len);
@@ -84,7 +84,8 @@ ssize_t pwritevNoInt(int fd, const iovec* iov, int count, off_t offset);
  * is unspecified.
  */
 FOLLY_NODISCARD ssize_t readFull(int fd, void* buf, size_t count);
-FOLLY_NODISCARD ssize_t preadFull(int fd, void* buf, size_t count, off_t offset);
+FOLLY_NODISCARD ssize_t
+preadFull(int fd, void* buf, size_t count, off_t offset);
 FOLLY_NODISCARD ssize_t readvFull(int fd, iovec* iov, int count);
 FOLLY_NODISCARD ssize_t preadvFull(int fd, iovec* iov, int count, off_t offset);
 
@@ -223,30 +224,92 @@ bool writeFile(
   return closeNoInt(fd) == 0 && ok;
 }
 
+/* For atomic writes, do we sync to guarantee ordering or not? */
+enum class SyncType {
+  WITH_SYNC,
+  WITHOUT_SYNC,
+};
+
+class WriteFileAtomicOptions {
+ public:
+  WriteFileAtomicOptions() = default;
+
+  mode_t permissions{0644};
+  SyncType syncType{SyncType::WITHOUT_SYNC};
+  std::string temporaryDirectory;
+
+  // The mode bits used for the temporary file
+  WriteFileAtomicOptions& setPermissions(mode_t);
+
+  // The default implementation does not sync the data to storage before the
+  // rename.  Therefore, the write is *not* atomic in the event of a power
+  // failure or OS crash.  To guarantee atomicity in these cases, specify
+  // syncType = WITH_SYNC, which will incur a performance cost of waiting for
+  // the data to be persisted to storage.  Note that the return of the function
+  // does not guarantee the directory modifications have been written to disk; a
+  // further sync of the directory after the function returns is required to
+  // ensure the modification is durable.
+  WriteFileAtomicOptions& setSyncType(SyncType);
+
+  // The implementation creates a temporary file as an implementation detail
+  // within this directory.  The temporary filenames themselves are
+  // implementation defined.
+  WriteFileAtomicOptions& setTemporaryDirectory(std::string);
+};
+
+/*
+ * writeFileAtomic() does not currently work on Windows.
+ * Windows does not provide atomic file renames, which makes implementing this
+ * tricky.  Windows does have a MoveFileTransactedA() API which could
+ * potentially be used, but according to the Microsoft documentation this API is
+ * discouraged and may be removed in a future version.
+ *
+ * In order to implement this properly on Windows we would probably need a pair
+ * of functions: one for writing the file, and one for reading the contents,
+ * where the two functions synchronize with each other.  We can probably only
+ * provide atomic update behavior with cooperation from the reader.
+ */
+#ifndef _WIN32
+
 /**
  * Write file contents "atomically".
  *
  * This writes the data to a temporary file in the destination directory, and
  * then renames it to the specified path.  This guarantees that the specified
- * file will be replaced the the specified contents on success, or will not be
+ * file will be replaced the specified contents on success, or will not be
  * modified on failure.
  *
  * Note that on platforms that do not provide atomic filesystem rename
  * functionality (e.g., Windows) this behavior may not be truly atomic.
+ *
+ * The default implementation does not sync the data to storage before the
+ * rename.  Therefore, the write is *not* atomic in the event of a power failure
+ * or OS crash.  To guarantee atomicity in these cases, specify syncType =
+ * WITH_SYNC, which will incur a performance cost of waiting for the data to be
+ * persisted to storage.  Note that the return of the function does not
+ * guarantee the directory modifications have been written to disk; a further
+ * sync of the directory after the function returns is required to ensure the
+ * modification is durable.
  */
 void writeFileAtomic(
-    StringPiece filename,
+    StringPiece filePath,
     iovec* iov,
     int count,
-    mode_t permissions = 0644);
+    mode_t permissions = 0644,
+    SyncType syncType = SyncType::WITHOUT_SYNC);
 void writeFileAtomic(
-    StringPiece filename,
+    StringPiece filePath,
     ByteRange data,
-    mode_t permissions = 0644);
+    mode_t permissions = 0644,
+    SyncType syncType = SyncType::WITHOUT_SYNC);
 void writeFileAtomic(
-    StringPiece filename,
+    StringPiece filePath,
     StringPiece data,
-    mode_t permissions = 0644);
+    mode_t permissions = 0644,
+    SyncType syncType = SyncType::WITHOUT_SYNC);
+
+void writeFileAtomic(
+    StringPiece filePath, StringPiece data, const WriteFileAtomicOptions&);
 
 /**
  * A version of writeFileAtomic() that returns an errno value instead of
@@ -255,9 +318,15 @@ void writeFileAtomic(
  * Returns 0 on success or an errno value on error.
  */
 int writeFileAtomicNoThrow(
-    StringPiece filename,
+    StringPiece filePath,
     iovec* iov,
     int count,
-    mode_t permissions = 0644);
+    mode_t permissions = 0644,
+    SyncType syncType = SyncType::WITHOUT_SYNC);
+
+int writeFileAtomicNoThrow(
+    StringPiece filePath, StringPiece data, const WriteFileAtomicOptions&);
+
+#endif // !_WIN32
 
 } // namespace folly

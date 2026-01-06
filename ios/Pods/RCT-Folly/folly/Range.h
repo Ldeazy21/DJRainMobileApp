@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,27 @@
  * limitations under the License.
  */
 
+//
+// Docs: https://fburl.com/fbcref_range
+//
+
+/**
+ * Range abstraction using a pair of iterators. It is not
+ * similar to boost's range abstraction because an API identical
+ * with the former StringPiece class is required, which is used alot
+ * internally. This abstraction does fulfill the needs of boost's
+ * range-oriented algorithms though.
+ *
+ * Note: (Keep memory lifetime in mind when using this class, since it
+ * does not manage the data it refers to - just like an iterator
+ * would not.)
+ *
+ * Additional documentation is in folly/docs/Range.md
+ *
+ * @refcode folly/docs/examples/folly/Range.h
+ * @struct folly::range
+ */
+
 // @author Mark Rabkin (mrabkin@fb.com)
 // @author Andrei Alexandrescu (andrei.alexandrescu@fb.com)
 
@@ -21,9 +42,9 @@
 
 #include <folly/Portability.h>
 #include <folly/hash/SpookyHashV2.h>
+#include <folly/lang/CString.h>
 #include <folly/lang/Exception.h>
 #include <folly/portability/Constexpr.h>
-#include <folly/portability/String.h>
 
 #include <algorithm>
 #include <array>
@@ -41,11 +62,16 @@
 #include <string_view> // @manual
 #endif
 
+#if __has_include(<fmt/format.h>)
+#include <fmt/format.h>
+#endif
+
 #include <folly/CpuId.h>
 #include <folly/Likely.h>
 #include <folly/Traits.h>
 #include <folly/detail/RangeCommon.h>
 #include <folly/detail/RangeSse42.h>
+#include <folly/lang/Byte.h>
 
 // Ignore shadowing warnings within this file, so includers can use -Wshadow.
 FOLLY_PUSH_WARNING
@@ -75,8 +101,8 @@ class Range;
 template <
     class Iter,
     class Comp = std::equal_to<typename Range<Iter>::value_type>>
-inline size_t
-qfind(const Range<Iter>& haystack, const Range<Iter>& needle, Comp eq = Comp());
+inline size_t qfind(
+    const Range<Iter>& haystack, const Range<Iter>& needle, Comp eq = Comp());
 
 /**
  * Finds the first occurrence of needle in haystack. The result is the
@@ -104,8 +130,7 @@ size_t rfind(
  */
 template <class Iter>
 inline size_t qfind_first_of(
-    const Range<Iter>& haystack,
-    const Range<Iter>& needle);
+    const Range<Iter>& haystack, const Range<Iter>& needle);
 
 /**
  * Small internal helper - returns the value just before an iterator.
@@ -121,28 +146,104 @@ struct IsCharPointer {};
 
 template <>
 struct IsCharPointer<char*> {
-  typedef int type;
+  using type = int;
 };
 
 template <>
 struct IsCharPointer<const char*> {
-  typedef int const_type;
-  typedef int type;
+  using const_type = int;
+  using type = int;
 };
+
+template <class T>
+struct IsUnsignedCharPointer {};
+
+template <>
+struct IsUnsignedCharPointer<unsigned char*> {
+  using type = int;
+};
+
+template <>
+struct IsUnsignedCharPointer<const unsigned char*> {
+  using const_type = int;
+  using type = int;
+};
+
+void range_is_char_type_f_(char const*);
+void range_is_char_type_f_(wchar_t const*);
+#if (defined(__cpp_char8_t) && __cpp_char8_t >= 201811L) || \
+    FOLLY_CPLUSPLUS >= 202002
+void range_is_char_type_f_(char8_t const*);
+#endif
+void range_is_char_type_f_(char16_t const*);
+void range_is_char_type_f_(char32_t const*);
+template <typename Iter>
+using range_is_char_type_d_ =
+    decltype(folly::detail::range_is_char_type_f_(FOLLY_DECLVAL(Iter)));
+template <typename Iter>
+constexpr bool range_is_char_type_v_ =
+    is_detected_v<range_is_char_type_d_, Iter>;
+
+void range_is_byte_type_f_(unsigned char const*);
+void range_is_byte_type_f_(signed char const*);
+void range_is_byte_type_f_(byte const*);
+template <typename Iter>
+using range_is_byte_type_d_ =
+    decltype(folly::detail::range_is_byte_type_f_(FOLLY_DECLVAL(Iter)));
+template <typename Iter>
+constexpr bool range_is_byte_type_v_ =
+    is_detected_v<range_is_byte_type_d_, Iter>;
+
+struct range_traits_char_ {
+  template <typename Value>
+  using apply = std::char_traits<Value>;
+};
+struct range_traits_byte_ {
+  template <typename Value>
+  struct apply {
+    FOLLY_ERASE static constexpr bool eq(Value a, Value b) { return a == b; }
+
+    FOLLY_ERASE static constexpr int compare(
+        Value const* a, Value const* b, std::size_t c) {
+      return !c ? 0 : std::memcmp(a, b, c);
+    }
+  };
+};
+struct range_traits_fbck_ {
+  template <typename Value>
+  struct apply {
+    FOLLY_ERASE static constexpr bool eq(Value a, Value b) { return a == b; }
+
+    FOLLY_ERASE static constexpr int compare(
+        Value const* a, Value const* b, std::size_t c) {
+      while (c--) {
+        auto&& ai = *a++;
+        auto&& bi = *b++;
+        if (ai < bi) {
+          return -1;
+        }
+        if (bi < ai) {
+          return +1;
+        }
+      }
+      return 0;
+    }
+  };
+};
+
+template <typename Iter>
+using range_traits_c_ = conditional_t<
+    range_is_char_type_v_<Iter>,
+    range_traits_char_,
+    conditional_t< //
+        range_is_byte_type_v_<Iter>,
+        range_traits_byte_,
+        range_traits_fbck_>>;
+template <typename Iter, typename Value>
+using range_traits_t_ = typename range_traits_c_<Iter>::template apply<Value>;
 
 } // namespace detail
 
-/**
- * Range abstraction keeping a pair of iterators. We couldn't use
- * boost's similar range abstraction because we need an API identical
- * with the former StringPiece class, which is used by a lot of other
- * code. This abstraction does fulfill the needs of boost's
- * range-oriented algorithms though.
- *
- * (Keep memory lifetime in mind when using this class, since it
- * doesn't manage the data it refers to - just like an iterator
- * wouldn't.)
- */
 template <class Iter>
 class Range {
  private:
@@ -150,42 +251,57 @@ class Range {
   using string = std::basic_string<char, std::char_traits<char>, Alloc>;
 
  public:
-  typedef std::size_t size_type;
-  typedef Iter iterator;
-  typedef Iter const_iterator;
-  typedef typename std::remove_reference<
-      typename std::iterator_traits<Iter>::reference>::type value_type;
+  using size_type = std::size_t;
+  using iterator = Iter;
+  using const_iterator = Iter;
+  using value_type = typename std::remove_reference<
+      typename std::iterator_traits<Iter>::reference>::type;
   using difference_type = typename std::iterator_traits<Iter>::difference_type;
-  typedef typename std::iterator_traits<Iter>::reference reference;
+  using reference = typename std::iterator_traits<Iter>::reference;
 
-  /**
+  /*
    * For MutableStringPiece and MutableByteRange we define StringPiece
    * and ByteRange as const_range_type (for everything else its just
    * identity). We do that to enable operations such as find with
    * args which are const.
    */
-  typedef typename std::conditional<
+  using const_range_type = typename std::conditional<
       std::is_same<Iter, char*>::value ||
           std::is_same<Iter, unsigned char*>::value,
       Range<const value_type*>,
-      Range<Iter>>::type const_range_type;
+      Range<Iter>>::type;
 
-  typedef std::char_traits<typename std::remove_const<value_type>::type>
-      traits_type;
+  using traits_type = detail::range_traits_t_< //
+      Iter,
+      typename std::remove_const<value_type>::type>;
 
   static const size_type npos;
 
-  // Works for all iterators
+  /**
+   * Works for all iterator
+   *
+   *
+   * @methodset Range
+   */
   constexpr Range() : b_(), e_() {}
 
   constexpr Range(const Range&) = default;
   constexpr Range(Range&&) = default;
 
  public:
-  // Works for all iterators
+  /**
+   * Works for all iterators
+   *
+   *
+   * @methodset Range
+   */
   constexpr Range(Iter start, Iter end) : b_(start), e_(end) {}
-
-  // Works only for random-access iterators
+  /**
+   *  Works only for random-access iterators
+   *
+   *
+   * @methodset Range
+   */
   constexpr Range(Iter start, size_t size) : b_(start), e_(start + size) {}
 
   /* implicit */ Range(std::nullptr_t) = delete;
@@ -209,7 +325,7 @@ class Range {
       class T = Iter,
       typename detail::IsCharPointer<T>::const_type = 0>
   Range(const string<Alloc>& str, typename string<Alloc>::size_type startFrom) {
-    if (UNLIKELY(startFrom > str.size())) {
+    if (FOLLY_UNLIKELY(startFrom > str.size())) {
       throw_exception<std::out_of_range>("index out of range");
     }
     b_ = str.data() + startFrom;
@@ -224,7 +340,7 @@ class Range {
       const string<Alloc>& str,
       typename string<Alloc>::size_type startFrom,
       typename string<Alloc>::size_type size) {
-    if (UNLIKELY(startFrom > str.size())) {
+    if (FOLLY_UNLIKELY(startFrom > str.size())) {
       throw_exception<std::out_of_range>("index out of range");
     }
     b_ = str.data() + startFrom;
@@ -248,7 +364,7 @@ class Range {
               std::declval<Container const&>().data() +
               std::declval<Container const&>().size()))>
   /* implicit */ constexpr Range(Container const& container)
-      : b_(container.data()), e_(b_ + container.size()) {}
+      : Range(container.data(), container.size()) {}
 
   template <
       class Container,
@@ -262,7 +378,7 @@ class Range {
   Range(Container const& container, typename Container::size_type startFrom) {
     auto const cdata = container.data();
     auto const csize = container.size();
-    if (UNLIKELY(startFrom > csize)) {
+    if (FOLLY_UNLIKELY(startFrom > csize)) {
       throw_exception<std::out_of_range>("index out of range");
     }
     b_ = cdata + startFrom;
@@ -284,7 +400,7 @@ class Range {
       typename Container::size_type size) {
     auto const cdata = container.data();
     auto const csize = container.size();
-    if (UNLIKELY(startFrom > csize)) {
+    if (FOLLY_UNLIKELY(startFrom > csize)) {
       throw_exception<std::out_of_range>("index out of range");
     }
     b_ = cdata + startFrom;
@@ -295,10 +411,43 @@ class Range {
     }
   }
 
-  // Allow implicit conversion from Range<const char*> (aka StringPiece) to
-  // Range<const unsigned char*> (aka ByteRange), as they're both frequently
-  // used to represent ranges of bytes.  Allow explicit conversion in the other
-  // direction.
+  /**
+   * @brief Allow explicit construction of ByteRange from std::string_view or
+   * std::string.
+
+   * Given that we allow implicit construction of ByteRange from
+   * StringPiece, it makes sense to allow this explicit construction, and avoids
+   * callers having to say ByteRange{StringPiece{str}} when they want a
+   * ByteRange pointing to data in a std::string.
+   *
+   *
+   * @methodset Range
+   */
+  template <
+      class Container,
+      class T = Iter,
+      typename detail::IsUnsignedCharPointer<T>::const_type = 0,
+      class = typename std::enable_if<
+            std::is_same<typename Container::const_pointer, const char*>::value
+          >::type,
+      class = decltype(
+          Iter(std::declval<Container const&>().data()),
+          Iter(
+              std::declval<Container const&>().data() +
+              std::declval<Container const&>().size()))>
+  explicit Range(const Container& str)
+      : b_(reinterpret_cast<Iter>(str.data())), e_(b_ + str.size()) {}
+  /**
+   * @brief Allow implicit conversion from Range<const char*> (aka StringPiece)
+   to
+   * Range<const unsigned char*> (aka ByteRange).
+
+   * Give both are frequently
+   * used to represent ranges of bytes.  Allow explicit conversion in the other
+   * direction.
+   *
+   * @methodset Range
+   */
   template <
       class OtherIter,
       typename std::enable_if<
@@ -341,8 +490,12 @@ class Range {
       : b_(reinterpret_cast<char*>(other.begin())),
         e_(reinterpret_cast<char*>(other.end())) {}
 
-  // Allow implicit conversion from Range<From> to Range<To> if From is
-  // implicitly convertible to To.
+  /**
+   * Allow implicit conversion from Range<From> to Range<To> if From is
+   * implicitly convertible to To.
+   *
+   * @methodset Range
+   */
   template <
       class OtherIter,
       typename std::enable_if<
@@ -351,9 +504,12 @@ class Range {
           int>::type = 0>
   constexpr /* implicit */ Range(const Range<OtherIter>& other)
       : b_(other.begin()), e_(other.end()) {}
-
-  // Allow explicit conversion from Range<From> to Range<To> if From is
-  // explicitly convertible to To.
+  /**
+   * Allow explicit conversion from Range<From> to Range<To> if From is
+   * explicitly convertible to To.
+   *
+   * @methodset Range
+   */
   template <
       class OtherIter,
       typename std::enable_if<
@@ -370,6 +526,8 @@ class Range {
    *
    * For instance, this allows constructing StringPiece from a
    * std::array<char, N> or a std::array<const char, N>
+   *
+   * @methodset Range
    */
   template <
       class T,
@@ -397,16 +555,25 @@ class Range {
       typename detail::IsCharPointer<T>::const_type = 0>
   Range& operator=(string<Alloc>&& rhs) = delete;
 
+  /**
+   * Clear start and end iterators
+   */
   void clear() {
     b_ = Iter();
     e_ = Iter();
   }
 
+  /**
+   * Assign start and end iterators
+   */
   void assign(Iter start, Iter end) {
     b_ = start;
     e_ = end;
   }
 
+  /**
+   * Reset start and end interator based on size
+   */
   void reset(Iter start, size_type size) {
     b_ = start;
     e_ = start + size;
@@ -427,27 +594,13 @@ class Range {
   constexpr size_type walk_size() const {
     return size_type(std::distance(b_, e_));
   }
-  constexpr bool empty() const {
-    return b_ == e_;
-  }
-  constexpr Iter data() const {
-    return b_;
-  }
-  constexpr Iter start() const {
-    return b_;
-  }
-  constexpr Iter begin() const {
-    return b_;
-  }
-  constexpr Iter end() const {
-    return e_;
-  }
-  constexpr Iter cbegin() const {
-    return b_;
-  }
-  constexpr Iter cend() const {
-    return e_;
-  }
+  constexpr bool empty() const { return b_ == e_; }
+  constexpr Iter data() const { return b_; }
+  constexpr Iter start() const { return b_; }
+  constexpr Iter begin() const { return b_; }
+  constexpr Iter end() const { return e_; }
+  constexpr Iter cbegin() const { return b_; }
+  constexpr Iter cend() const { return e_; }
   value_type& front() {
     assert(b_ < e_);
     return *b_;
@@ -487,7 +640,7 @@ class Range {
   template <typename ValueType>
   struct StringViewType
       : std::conditional<
-            std::is_pod<std::remove_const_t<ValueType>>::value,
+            std::is_trivial<std::remove_const_t<ValueType>>::value,
             std::basic_string_view<std::remove_const_t<ValueType>>,
             NotStringView> {};
 
@@ -587,16 +740,10 @@ class Range {
   }
 
   // Works only for Range<const char*> and Range<char*>
-  std::string str() const {
-    return to<std::string>();
-  }
-  std::string toString() const {
-    return to<std::string>();
-  }
+  std::string str() const { return to<std::string>(); }
+  std::string toString() const { return to<std::string>(); }
 
-  const_range_type castToConst() const {
-    return const_range_type(*this);
-  }
+  const_range_type castToConst() const { return const_range_type(*this); }
 
   int compare(const const_range_type& o) const {
     const size_type tsize = this->size();
@@ -669,21 +816,24 @@ class Range {
   }
 
   void advance(size_type n) {
-    if (UNLIKELY(n > size())) {
+    if (FOLLY_UNLIKELY(n > size())) {
       throw_exception<std::out_of_range>("index out of range");
     }
     b_ += n;
   }
 
   void subtract(size_type n) {
-    if (UNLIKELY(n > size())) {
+    if (FOLLY_UNLIKELY(n > size())) {
       throw_exception<std::out_of_range>("index out of range");
     }
     e_ -= n;
   }
 
+  // Returns a window into the current range, starting at first, and spans
+  // length characters (or until the end of the current range, whichever comes
+  // first). Throws if first is past the end of the current range.
   Range subpiece(size_type first, size_type length = npos) const {
-    if (UNLIKELY(first > size())) {
+    if (FOLLY_UNLIKELY(first > size())) {
       throw_exception<std::out_of_range>("index out of range");
     }
 
@@ -753,13 +903,9 @@ class Range {
     return ret == npos ? ret : ret + pos;
   }
 
-  size_type find(value_type c) const {
-    return qfind(castToConst(), c);
-  }
+  size_type find(value_type c) const { return qfind(castToConst(), c); }
 
-  size_type rfind(value_type c) const {
-    return folly::rfind(castToConst(), c);
-  }
+  size_type rfind(value_type c) const { return folly::rfind(castToConst(), c); }
 
   size_type find(value_type c, size_t pos) const {
     if (pos > size()) {
@@ -795,9 +941,7 @@ class Range {
     return find_first_of(const_range_type(needles, n), pos);
   }
 
-  size_type find_first_of(value_type c) const {
-    return find(c);
-  }
+  size_type find_first_of(value_type c) const { return find(c); }
 
   size_type find_first_of(value_type c, size_t pos) const {
     return find(c, pos);
@@ -828,9 +972,7 @@ class Range {
     return size() >= other.size() &&
         castToConst().subpiece(0, other.size()) == other;
   }
-  bool startsWith(value_type c) const {
-    return !empty() && front() == c;
-  }
+  bool startsWith(value_type c) const { return !empty() && front() == c; }
 
   template <class Comp>
   bool startsWith(const const_range_type& other, Comp&& eq) const {
@@ -849,9 +991,7 @@ class Range {
     return size() >= other.size() &&
         castToConst().subpiece(size() - other.size()) == other;
   }
-  bool endsWith(value_type c) const {
-    return !empty() && back() == c;
-  }
+  bool endsWith(value_type c) const { return !empty() && back() == c; }
 
   template <class Comp>
   bool endsWith(const const_range_type& other, Comp&& eq) const {
@@ -913,7 +1053,7 @@ class Range {
    * range. Returns false if 'replacements' does not fit. Example use:
    *
    * char in[] = "buffer";
-   * auto msp = MutablesStringPiece(input);
+   * auto msp = MutableStringPiece(input);
    * EXPECT_TRUE(msp.replaceAt(2, "tt"));
    * EXPECT_EQ(msp, "butter");
    *
@@ -932,7 +1072,7 @@ class Range {
   }
 
   /**
-   * Replaces all occurences of 'source' with 'dest'. Returns number
+   * Replaces all occurrences of 'source' with 'dest'. Returns number
    * of replacements made. Source and dest have to have the same
    * length. Throws if the lengths are different. If 'source' is a
    * pattern that is overlapping with itself, we perform sequential
@@ -941,7 +1081,7 @@ class Range {
    * Example use:
    *
    * char in[] = "buffer";
-   * auto msp = MutablesStringPiece(input);
+   * auto msp = MutableStringPiece(input);
    * EXPECT_EQ(msp.replaceAll("ff","tt"), 1);
    * EXPECT_EQ(msp, "butter");
    */
@@ -969,7 +1109,7 @@ class Range {
 
   /**
    * Splits this `Range` `[b, e)` in the position `i` dictated by the next
-   * occurence of `delimiter`.
+   * occurrence of `delimiter`.
    *
    * Returns a new `Range` `[b, i)` and adjusts this range to start right after
    * the delimiter's position. This range will be empty if the delimiter is not
@@ -998,10 +1138,10 @@ class Range {
    * @author: Marcelo Juchem <marcelo@fb.com>
    */
   Range split_step(value_type delimiter) {
-    auto i = std::find(b_, e_, delimiter);
-    Range result(b_, i);
+    auto i = find(delimiter);
+    Range result(b_, i == std::string::npos ? size() : i);
 
-    b_ = i == e_ ? e_ : std::next(i);
+    b_ = result.end() == e_ ? e_ : std::next(result.end());
 
     return result;
   }
@@ -1095,7 +1235,8 @@ class Range {
   }
 
  private:
-  Iter b_, e_;
+  Iter b_;
+  Iter e_;
 };
 
 template <class Iter>
@@ -1157,15 +1298,14 @@ constexpr Range<T const*> crange(std::array<T, n> const& array) {
   return Range<T const*>{array};
 }
 
-typedef Range<const char*> StringPiece;
-typedef Range<char*> MutableStringPiece;
-typedef Range<const unsigned char*> ByteRange;
-typedef Range<unsigned char*> MutableByteRange;
+using StringPiece = Range<const char*>;
+using MutableStringPiece = Range<char*>;
+using ByteRange = Range<const unsigned char*>;
+using MutableByteRange = Range<unsigned char*>;
 
 template <class C>
 std::basic_ostream<C>& operator<<(
-    std::basic_ostream<C>& os,
-    Range<C const*> piece) {
+    std::basic_ostream<C>& os, Range<C const*> piece) {
   using StreamSize = decltype(os.width());
   os.write(piece.start(), static_cast<StreamSize>(piece.size()));
   return os;
@@ -1184,7 +1324,15 @@ std::basic_ostream<C>& operator<<(std::basic_ostream<C>& os, Range<C*> piece) {
 
 template <class Iter>
 inline bool operator==(const Range<Iter>& lhs, const Range<Iter>& rhs) {
-  return lhs.size() == rhs.size() && lhs.compare(rhs) == 0;
+  if (lhs.size() != rhs.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < lhs.size(); ++i) {
+    if (!Range<Iter>::traits_type::eq(lhs[i], rhs[i])) {
+      return false;
+    }
+  }
+  return true;
 }
 
 template <class Iter>
@@ -1235,8 +1383,7 @@ struct ComparableAsStringPiece {
  */
 template <class T, class U>
 std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator==(
-    const T& lhs,
-    const U& rhs) {
+    const T& lhs, const U& rhs) {
   return StringPiece(lhs) == StringPiece(rhs);
 }
 
@@ -1245,8 +1392,7 @@ std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator==(
  */
 template <class T, class U>
 std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator!=(
-    const T& lhs,
-    const U& rhs) {
+    const T& lhs, const U& rhs) {
   return StringPiece(lhs) != StringPiece(rhs);
 }
 
@@ -1255,8 +1401,7 @@ std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator!=(
  */
 template <class T, class U>
 std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator<(
-    const T& lhs,
-    const U& rhs) {
+    const T& lhs, const U& rhs) {
   return StringPiece(lhs) < StringPiece(rhs);
 }
 
@@ -1265,8 +1410,7 @@ std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator<(
  */
 template <class T, class U>
 std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator>(
-    const T& lhs,
-    const U& rhs) {
+    const T& lhs, const U& rhs) {
   return StringPiece(lhs) > StringPiece(rhs);
 }
 
@@ -1275,8 +1419,7 @@ std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator>(
  */
 template <class T, class U>
 std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator<=(
-    const T& lhs,
-    const U& rhs) {
+    const T& lhs, const U& rhs) {
   return StringPiece(lhs) <= StringPiece(rhs);
 }
 
@@ -1285,8 +1428,7 @@ std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator<=(
  */
 template <class T, class U>
 std::enable_if_t<detail::ComparableAsStringPiece<T, U>::value, bool> operator>=(
-    const T& lhs,
-    const U& rhs) {
+    const T& lhs, const U& rhs) {
   return StringPiece(lhs) >= StringPiece(rhs);
 }
 
@@ -1352,8 +1494,7 @@ size_t qfind(const Range<Iter>& haystack, const Range<Iter>& needle, Comp eq) {
 namespace detail {
 
 inline size_t qfind_first_byte_of(
-    const StringPiece haystack,
-    const StringPiece needles) {
+    const StringPiece haystack, const StringPiece needles) {
   static auto const qfind_first_byte_of_fn = folly::CpuId().sse42()
       ? qfind_first_byte_of_sse42
       : qfind_first_byte_of_nosse;
@@ -1364,18 +1505,14 @@ inline size_t qfind_first_byte_of(
 
 template <class Iter, class Comp>
 size_t qfind_first_of(
-    const Range<Iter>& haystack,
-    const Range<Iter>& needles,
-    Comp eq) {
+    const Range<Iter>& haystack, const Range<Iter>& needles, Comp eq) {
   auto ret = std::find_first_of(
       haystack.begin(), haystack.end(), needles.begin(), needles.end(), eq);
   return ret == haystack.end() ? std::string::npos : ret - haystack.begin();
 }
 
 struct AsciiCaseSensitive {
-  bool operator()(char lhs, char rhs) const {
-    return lhs == rhs;
-  }
+  bool operator()(char lhs, char rhs) const { return lhs == rhs; }
 };
 
 /**
@@ -1436,15 +1573,14 @@ inline size_t rfind(const Range<const char*>& haystack, const char& needle) {
     return std::string::npos;
   }
   auto pos = static_cast<const char*>(
-      ::memrchr(haystack.data(), needle, haystack.size()));
+      memrchr(haystack.data(), needle, haystack.size()));
   return pos == nullptr ? std::string::npos : pos - haystack.data();
 }
 
 // specialization for ByteRange
 template <>
 inline size_t qfind(
-    const Range<const unsigned char*>& haystack,
-    const unsigned char& needle) {
+    const Range<const unsigned char*>& haystack, const unsigned char& needle) {
   // memchr expects a not-null pointer, early return if the range is empty.
   if (haystack.empty()) {
     return std::string::npos;
@@ -1456,14 +1592,13 @@ inline size_t qfind(
 
 template <>
 inline size_t rfind(
-    const Range<const unsigned char*>& haystack,
-    const unsigned char& needle) {
+    const Range<const unsigned char*>& haystack, const unsigned char& needle) {
   // memchr expects a not-null pointer, early return if the range is empty.
   if (haystack.empty()) {
     return std::string::npos;
   }
   auto pos = static_cast<const unsigned char*>(
-      ::memrchr(haystack.data(), needle, haystack.size()));
+      memrchr(haystack.data(), needle, haystack.size()));
   return pos == nullptr ? std::string::npos : pos - haystack.data();
 }
 
@@ -1475,8 +1610,7 @@ size_t qfind_first_of(const Range<Iter>& haystack, const Range<Iter>& needles) {
 // specialization for StringPiece
 template <>
 inline size_t qfind_first_of(
-    const Range<const char*>& haystack,
-    const Range<const char*>& needles) {
+    const Range<const char*>& haystack, const Range<const char*>& needles) {
   return detail::qfind_first_byte_of(haystack, needles);
 }
 
@@ -1504,8 +1638,10 @@ struct hasher<
     // suitable hash of T.  Something like absl::is_uniquely_represented<T>
     // would be better.  std::is_pod is not enough, because POD types
     // can contain pointers and padding.  Also, floating point numbers
-    // may be == without being bit-identical.
-    return hash::SpookyHashV2::Hash64(r.begin(), r.size() * sizeof(T), 0);
+    // may be == without being bit-identical.  size_t is less than 64
+    // bits on some platforms.
+    return static_cast<size_t>(
+        hash::SpookyHashV2::Hash64(r.begin(), r.size() * sizeof(T), 0));
   }
 };
 
@@ -1518,26 +1654,29 @@ struct hasher<
 inline namespace literals {
 inline namespace string_piece_literals {
 constexpr Range<char const*> operator"" _sp(
-    char const* str,
-    size_t len) noexcept {
+    char const* str, size_t len) noexcept {
   return Range<char const*>(str, len);
 }
 
+#if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
+constexpr Range<char8_t const*> operator"" _sp(
+    char8_t const* str, size_t len) noexcept {
+  return Range<char8_t const*>(str, len);
+}
+#endif
+
 constexpr Range<char16_t const*> operator"" _sp(
-    char16_t const* str,
-    size_t len) noexcept {
+    char16_t const* str, size_t len) noexcept {
   return Range<char16_t const*>(str, len);
 }
 
 constexpr Range<char32_t const*> operator"" _sp(
-    char32_t const* str,
-    size_t len) noexcept {
+    char32_t const* str, size_t len) noexcept {
   return Range<char32_t const*>(str, len);
 }
 
 constexpr Range<wchar_t const*> operator"" _sp(
-    wchar_t const* str,
-    size_t len) noexcept {
+    wchar_t const* str, size_t len) noexcept {
   return Range<wchar_t const*>(str, len);
 }
 } // namespace string_piece_literals
@@ -1545,6 +1684,47 @@ constexpr Range<wchar_t const*> operator"" _sp(
 
 } // namespace folly
 
+// Avoid ambiguity in older fmt versions due to StringPiece's conversions.
+#if FMT_VERSION >= 70000
+namespace fmt {
+template <>
+struct formatter<folly::StringPiece> : private formatter<string_view> {
+  using formatter<string_view>::parse;
+
+#if FMT_VERSION >= 80000
+  template <typename Context>
+  typename Context::iterator format(folly::StringPiece s, Context& ctx) const {
+    return formatter<string_view>::format({s.data(), s.size()}, ctx);
+  }
+#else
+  template <typename Context>
+  typename Context::iterator format(folly::StringPiece s, Context& ctx) {
+    return formatter<string_view>::format({s.data(), s.size()}, ctx);
+  }
+#endif
+};
+} // namespace fmt
+#endif
+
 FOLLY_POP_WARNING
 
 FOLLY_ASSUME_FBVECTOR_COMPATIBLE_1(folly::Range)
+
+// Unfortunately it is not possible to forward declare enable_view under
+// MSVC 2019.8 due to compiler bugs, so we need to include the actual
+// definition if available.
+#if __has_include(<range/v3/range/concepts.hpp>) && defined(_MSC_VER) && _MSC_VER >= 1920
+#include <range/v3/range/concepts.hpp> // @manual
+#else
+namespace ranges {
+template <class T>
+extern const bool enable_view;
+} // namespace ranges
+#endif
+
+// Tell the range-v3 library that this type should satisfy
+// the view concept (a lightweight, non-owning range).
+namespace ranges {
+template <class Iter>
+FOLLY_INLINE_VARIABLE constexpr bool enable_view<::folly::Range<Iter>> = true;
+} // namespace ranges

@@ -1,4 +1,5 @@
 ${PODS_ROOT}/Target Support Files/Pods-DJRainMobile/Pods-DJRainMobile-resources.sh
+${PODS_CONFIGURATION_BUILD_DIR}/RCT-Folly/RCT-Folly_privacy.bundle
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/AntDesign.ttf
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Entypo.ttf
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/EvilIcons.ttf
@@ -7,6 +8,9 @@ ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/FontAwesome.ttf
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf
+${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/FontAwesome6_Brands.ttf
+${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/FontAwesome6_Regular.ttf
+${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/FontAwesome6_Solid.ttf
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Fontisto.ttf
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Foundation.ttf
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Ionicons.ttf
@@ -15,4 +19,8 @@ ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/MaterialIcons.tt
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Octicons.ttf
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/SimpleLineIcons.ttf
 ${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Zocial.ttf
-${PODS_CONFIGURATION_BUILD_DIR}/React-Core/AccessibilityResources.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/Toast/Toast.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/boost/boost_privacy.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/glog/glog_privacy.bundle

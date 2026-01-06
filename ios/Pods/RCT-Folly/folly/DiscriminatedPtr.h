@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,13 +92,13 @@ class DiscriminatedPtr {
    */
   template <typename T>
   T* get_nothrow() noexcept {
-    void* p = LIKELY(hasType<T>()) ? ptr() : nullptr;
+    void* p = FOLLY_LIKELY(hasType<T>()) ? ptr() : nullptr;
     return static_cast<T*>(p);
   }
 
   template <typename T>
   const T* get_nothrow() const noexcept {
-    const void* p = LIKELY(hasType<T>()) ? ptr() : nullptr;
+    const void* p = FOLLY_LIKELY(hasType<T>()) ? ptr() : nullptr;
     return static_cast<const T*>(p);
   }
 
@@ -110,7 +110,7 @@ class DiscriminatedPtr {
    */
   template <typename T>
   T* get() {
-    if (UNLIKELY(!hasType<T>())) {
+    if (FOLLY_UNLIKELY(!hasType<T>())) {
       throw std::invalid_argument("Invalid type");
     }
     return static_cast<T*>(ptr());
@@ -118,7 +118,7 @@ class DiscriminatedPtr {
 
   template <typename T>
   const T* get() const {
-    if (UNLIKELY(!hasType<T>())) {
+    if (FOLLY_UNLIKELY(!hasType<T>())) {
       throw std::invalid_argument("Invalid type");
     }
     return static_cast<const T*>(ptr());
@@ -127,9 +127,7 @@ class DiscriminatedPtr {
   /**
    * Return true iff this DiscriminatedPtr is empty.
    */
-  bool empty() const {
-    return index() == 0;
-  }
+  bool empty() const { return index() == 0; }
 
   /**
    * Return true iff the object pointed by this DiscriminatedPtr has type T,
@@ -144,9 +142,7 @@ class DiscriminatedPtr {
   /**
    * Clear this DiscriminatedPtr, making it empty.
    */
-  void clear() {
-    data_ = 0;
-  }
+  void clear() { data_ = 0; }
 
   /**
    * Assignment operator from a pointer of type T.
@@ -200,9 +196,7 @@ class DiscriminatedPtr {
     return uint16_t(dptr_detail::GetTypeIndex<T, Types...>::value);
   }
 
-  uint16_t index() const {
-    return data_ >> 48;
-  }
+  uint16_t index() const { return data_ >> 48; }
   void* ptr() const {
     return reinterpret_cast<void*>(data_ & ((1ULL << 48) - 1));
   }
@@ -225,22 +219,19 @@ class DiscriminatedPtr {
 
 template <typename Visitor, typename... Args>
 decltype(auto) apply_visitor(
-    Visitor&& visitor,
-    const DiscriminatedPtr<Args...>& variant) {
+    Visitor&& visitor, const DiscriminatedPtr<Args...>& variant) {
   return variant.apply(std::forward<Visitor>(visitor));
 }
 
 template <typename Visitor, typename... Args>
 decltype(auto) apply_visitor(
-    Visitor&& visitor,
-    DiscriminatedPtr<Args...>& variant) {
+    Visitor&& visitor, DiscriminatedPtr<Args...>& variant) {
   return variant.apply(std::forward<Visitor>(visitor));
 }
 
 template <typename Visitor, typename... Args>
 decltype(auto) apply_visitor(
-    Visitor&& visitor,
-    DiscriminatedPtr<Args...>&& variant) {
+    Visitor&& visitor, DiscriminatedPtr<Args...>&& variant) {
   return variant.apply(std::forward<Visitor>(visitor));
 }
 

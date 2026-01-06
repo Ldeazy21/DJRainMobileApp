@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,14 +27,20 @@
  * @author Xiao Shi       <xshi@fb.com>
  */
 
+#include <cstddef>
+#include <initializer_list>
 #include <stdexcept>
+#include <tuple>
 
+#include <folly/Portability.h>
 #include <folly/Range.h>
 #include <folly/Traits.h>
+#include <folly/container/View.h>
 #include <folly/lang/Exception.h>
 #include <folly/lang/SafeAssert.h>
 
 #include <folly/container/F14Map-fwd.h>
+#include <folly/container/Iterator.h>
 #include <folly/container/detail/F14Policy.h>
 #include <folly/container/detail/F14Table.h>
 #include <folly/container/detail/Util.h>
@@ -51,7 +57,7 @@ template <typename Policy>
 class F14BasicMap {
   template <typename K, typename T>
   using EnableHeterogeneousFind = std::enable_if_t<
-      EligibleForHeterogeneousFind<
+      ::folly::detail::EligibleForHeterogeneousFind<
           typename Policy::Key,
           typename Policy::Hasher,
           typename Policy::KeyEqual,
@@ -60,22 +66,27 @@ class F14BasicMap {
 
   template <typename K, typename T>
   using EnableHeterogeneousInsert = std::enable_if_t<
-      EligibleForHeterogeneousInsert<
+      ::folly::detail::EligibleForHeterogeneousInsert<
           typename Policy::Key,
           typename Policy::Hasher,
           typename Policy::KeyEqual,
           K>::value,
       T>;
 
+  template <typename K>
+  using IsIter = Disjunction<
+      std::is_same<typename Policy::Iter, remove_cvref_t<K>>,
+      std::is_same<typename Policy::ConstIter, remove_cvref_t<K>>>;
+
   template <typename K, typename T>
   using EnableHeterogeneousErase = std::enable_if_t<
-      EligibleForHeterogeneousFind<
-          typename Policy::Value,
+      ::folly::detail::EligibleForHeterogeneousFind<
+          typename Policy::Key,
           typename Policy::Hasher,
           typename Policy::KeyEqual,
-          K>::value &&
-          !std::is_same<typename Policy::Iter, remove_cvref_t<K>>::value &&
-          !std::is_same<typename Policy::ConstIter, remove_cvref_t<K>>::value,
+          std::conditional_t<IsIter<K>::value, typename Policy::Key, K>>::
+              value &&
+          !IsIter<K>::value,
       T>;
 
  public:
@@ -102,8 +113,7 @@ class F14BasicMap {
  public:
   //// PUBLIC - Member functions
 
-  F14BasicMap() noexcept(Policy::kDefaultConstructIsNoexcept)
-      : F14BasicMap(0) {}
+  F14BasicMap() noexcept(Policy::kDefaultConstructIsNoexcept) : table_{} {}
 
   explicit F14BasicMap(
       std::size_t initialCapacity,
@@ -133,7 +143,7 @@ class F14BasicMap {
       key_equal const& eq = key_equal{},
       allocator_type const& alloc = allocator_type{})
       : table_{initialCapacity, hash, eq, alloc} {
-    initialInsert(first, last, initialCapacity);
+    initialInsert(std::move(first), std::move(last), initialCapacity);
   }
 
   template <typename InputIt>
@@ -143,7 +153,7 @@ class F14BasicMap {
       std::size_t initialCapacity,
       allocator_type const& alloc)
       : table_{initialCapacity, hasher{}, key_equal{}, alloc} {
-    initialInsert(first, last, initialCapacity);
+    initialInsert(std::move(first), std::move(last), initialCapacity);
   }
 
   template <typename InputIt>
@@ -154,7 +164,7 @@ class F14BasicMap {
       hasher const& hash,
       allocator_type const& alloc)
       : table_{initialCapacity, hash, key_equal{}, alloc} {
-    initialInsert(first, last, initialCapacity);
+    initialInsert(std::move(first), std::move(last), initialCapacity);
   }
 
   F14BasicMap(F14BasicMap const& rhs) = default;
@@ -168,7 +178,7 @@ class F14BasicMap {
       Policy::kAllocIsAlwaysEqual)
       : table_{std::move(rhs.table_), alloc} {}
 
-  F14BasicMap(
+  /* implicit */ F14BasicMap(
       std::initializer_list<value_type> init,
       std::size_t initialCapacity = 0,
       hasher const& hash = hasher{},
@@ -201,60 +211,70 @@ class F14BasicMap {
 
   F14BasicMap& operator=(std::initializer_list<value_type> ilist) {
     clear();
-    bulkInsert(ilist.begin(), ilist.end(), false);
+    bulkInsert(ilist.begin(), ilist.end(), true);
     return *this;
   }
 
-  allocator_type get_allocator() const noexcept {
-    return table_.alloc();
-  }
+  /// Get the allocator for this container.
+  /// @methodset Allocator
+  allocator_type get_allocator() const noexcept { return table_.alloc(); }
 
   //// PUBLIC - Iterators
 
-  iterator begin() noexcept {
-    return table_.makeIter(table_.begin());
-  }
-  const_iterator begin() const noexcept {
-    return cbegin();
-  }
+  /// Get an iterator to the beginning
+  /// @methodset Iterators
+  iterator begin() noexcept { return table_.makeIter(table_.begin()); }
+  const_iterator begin() const noexcept { return cbegin(); }
+  /// Get an iterator to the beginning
+  /// @methodset Iterators
   const_iterator cbegin() const noexcept {
     return table_.makeConstIter(table_.begin());
   }
 
-  iterator end() noexcept {
-    return table_.makeIter(table_.end());
-  }
-  const_iterator end() const noexcept {
-    return cend();
-  }
+  /// Get an iterator to the end
+  /// @methodset Iterators
+  iterator end() noexcept { return table_.makeIter(table_.end()); }
+  const_iterator end() const noexcept { return cend(); }
+  /// Get an iterator to the end
+  /// @methodset Iterators
   const_iterator cend() const noexcept {
     return table_.makeConstIter(table_.end());
   }
 
   //// PUBLIC - Capacity
 
-  bool empty() const noexcept {
-    return table_.empty();
-  }
+  /// Check if this container has any elements.
+  /// @methodset Capacity
+  bool empty() const noexcept { return table_.empty(); }
 
-  std::size_t size() const noexcept {
-    return table_.size();
-  }
+  /// Number of elements in this container.
+  /// @methodset Capacity
+  std::size_t size() const noexcept { return table_.size(); }
 
-  std::size_t max_size() const noexcept {
-    return table_.max_size();
-  }
+  /// The maximum size of this container.
+  /// @methodset Capacity
+  std::size_t max_size() const noexcept { return table_.max_size(); }
 
   //// PUBLIC - Modifiers
 
-  void clear() noexcept {
-    table_.clear();
-  }
+  /**
+   * Remove all elements.
+   * @methodset Modifiers
+   *
+   * Does not free heap-allocated memory; capacity is unchanged.
+   */
+  void clear() noexcept { table_.clear(); }
 
+  /**
+   * Add a single element.
+   * @overloadbrief Add elements.
+   * @methodset Modifiers
+   */
   std::pair<iterator, bool> insert(value_type const& value) {
     return emplace(value);
   }
 
+  /// Add a single element, of a heterogeneous type.
   template <typename P>
   std::enable_if_t<
       std::is_constructible<value_type, P&&>::value,
@@ -263,8 +283,12 @@ class F14BasicMap {
     return emplace(std::forward<P>(value));
   }
 
-  // TODO(T31574848): Work around libstdc++ versions (e.g., GCC < 6) with no
-  // implementation of N4387 ("perfect initialization" for pairs and tuples).
+  /**
+   * Add a single element, of a heterogeneous type.
+   *
+   * TODO(T31574848): Work around libstdc++ versions (e.g., GCC < 6) with no
+   * implementation of N4387 ("perfect initialization" for pairs and tuples).
+   */
   template <typename U1, typename U2>
   std::enable_if_t<
       std::is_constructible<key_type, U1 const&>::value &&
@@ -274,7 +298,12 @@ class F14BasicMap {
     return emplace(value);
   }
 
-  // TODO(T31574848)
+  /**
+   * Add a single element, of a heterogeneous type.
+   *
+   * TODO(T31574848): Work around libstdc++ versions (e.g., GCC < 6) with no
+   * implementation of N4387 ("perfect initialization" for pairs and tuples).
+   */
   template <typename U1, typename U2>
   std::enable_if_t<
       std::is_constructible<key_type, U1&&>::value &&
@@ -284,6 +313,7 @@ class F14BasicMap {
     return emplace(std::move(value));
   }
 
+  /// Add a single element.
   std::pair<iterator, bool> insert(value_type&& value) {
     return emplace(std::move(value));
   }
@@ -293,20 +323,25 @@ class F14BasicMap {
   // by the caller to use the hinted API is at best unnecessary, and at
   // worst a pessimization.  It is used, however, so we provide it.
 
+  /// Add a single element, with a locational hint.
   iterator insert(const_iterator /*hint*/, value_type const& value) {
     return insert(value).first;
   }
 
+  /// Add a single element, of heterogeneous type, with a locational hint.
   template <typename P>
   std::enable_if_t<std::is_constructible<value_type, P&&>::value, iterator>
   insert(const_iterator /*hint*/, P&& value) {
     return insert(std::forward<P>(value)).first;
   }
 
+  /// Add a single element, with a locational hint.
   iterator insert(const_iterator /*hint*/, value_type&& value) {
     return insert(std::move(value)).first;
   }
 
+  /// Emplace with hint.
+  /// @methodset Modifiers
   template <class... Args>
   iterator emplace_hint(const_iterator /*hint*/, Args&&... args) {
     return emplace(std::forward<Args>(args)...).first;
@@ -314,8 +349,8 @@ class F14BasicMap {
 
  private:
   template <class InputIt>
-  FOLLY_ALWAYS_INLINE void
-  bulkInsert(InputIt first, InputIt last, bool autoReserve) {
+  FOLLY_ALWAYS_INLINE void bulkInsert(
+      InputIt first, InputIt last, bool autoReserve) {
     if (autoReserve) {
       auto n = std::distance(first, last);
       if (n == 0) {
@@ -339,31 +374,35 @@ class F14BasicMap {
     // is easy to disable at a particular call site by asking for an
     // initialCapacity of 1.
     bool autoReserve =
-        std::is_same<
-            typename std::iterator_traits<InputIt>::iterator_category,
-            std::random_access_iterator_tag>::value &&
+        std::is_base_of<
+            std::random_access_iterator_tag,
+            typename std::iterator_traits<InputIt>::iterator_category>::value &&
         initialCapacity == 0;
-    bulkInsert(first, last, autoReserve);
+    bulkInsert(std::move(first), std::move(last), autoReserve);
   }
 
  public:
+  /// Add elements
   template <class InputIt>
   void insert(InputIt first, InputIt last) {
     // Bulk reserve is a heuristic choice, so it can backfire.  We restrict
     // ourself to situations that mimic bulk construction without an
     // explicit initialCapacity.
     bool autoReserve =
-        std::is_same<
-            typename std::iterator_traits<InputIt>::iterator_category,
-            std::random_access_iterator_tag>::value &&
+        std::is_base_of<
+            std::random_access_iterator_tag,
+            typename std::iterator_traits<InputIt>::iterator_category>::value &&
         bucket_count() == 0;
-    bulkInsert(first, last, autoReserve);
+    bulkInsert(std::move(first), std::move(last), autoReserve);
   }
 
+  /// Add elements from an initializer list
   void insert(std::initializer_list<value_type> ilist) {
     insert(ilist.begin(), ilist.end());
   }
 
+  /// Insert if the key is missing, overwrite using operator= if present.
+  /// @methodset Modifiers
   template <typename M>
   std::pair<iterator, bool> insert_or_assign(key_type const& key, M&& obj) {
     auto rv = try_emplace(key, std::forward<M>(obj));
@@ -383,21 +422,50 @@ class F14BasicMap {
   }
 
   template <typename M>
-  iterator
-  insert_or_assign(const_iterator /*hint*/, key_type const& key, M&& obj) {
-    return insert_or_assign(key, std::move(obj)).first;
+  std::pair<iterator, bool> insert_or_assign(
+      F14HashToken const& token, key_type const& key, M&& obj) {
+    auto rv = try_emplace_token(token, key, std::forward<M>(obj));
+    if (!rv.second) {
+      rv.first->second = std::forward<M>(obj);
+    }
+    return rv;
+  }
+
+  template <typename M>
+  std::pair<iterator, bool> insert_or_assign(
+      F14HashToken const& token, key_type&& key, M&& obj) {
+    auto rv = try_emplace_token(token, std::move(key), std::forward<M>(obj));
+    if (!rv.second) {
+      rv.first->second = std::forward<M>(obj);
+    }
+    return rv;
+  }
+
+  template <typename M>
+  iterator insert_or_assign(
+      const_iterator /*hint*/, key_type const& key, M&& obj) {
+    return insert_or_assign(key, std::forward<M>(obj)).first;
   }
 
   template <typename M>
   iterator insert_or_assign(const_iterator /*hint*/, key_type&& key, M&& obj) {
-    return insert_or_assign(std::move(key), std::move(obj)).first;
+    return insert_or_assign(std::move(key), std::forward<M>(obj)).first;
   }
 
   template <typename K, typename M>
   EnableHeterogeneousInsert<K, std::pair<iterator, bool>> insert_or_assign(
-      K&& key,
-      M&& obj) {
+      K&& key, M&& obj) {
     auto rv = try_emplace(std::forward<K>(key), std::forward<M>(obj));
+    if (!rv.second) {
+      rv.first->second = std::forward<M>(obj);
+    }
+    return rv;
+  }
+
+  template <typename K, typename M>
+  EnableHeterogeneousInsert<K, std::pair<iterator, bool>> insert_or_assign(
+      F14HashToken const& token, K&& key, M&& obj) {
+    auto rv = try_emplace(token, std::forward<K>(key), std::forward<M>(obj));
     if (!rv.second) {
       rv.first->second = std::forward<M>(obj);
     }
@@ -406,22 +474,34 @@ class F14BasicMap {
 
  private:
   template <typename Arg>
-  using UsableAsKey =
+  using UsableAsKey = ::folly::detail::
       EligibleForHeterogeneousFind<key_type, hasher, key_equal, Arg>;
 
  public:
+  /**
+   * Add an element by constructing it in-place.
+   * @overloadbrief Add elements in-place.
+   * @methodset Modifiers
+   */
   template <typename... Args>
   std::pair<iterator, bool> emplace(Args&&... args) {
-    auto rv = folly::detail::callWithExtractedKey<key_type, UsableAsKey>(
-        table_.alloc(),
-        [&](auto&&... inner) {
-          return table_.tryEmplaceValue(
-              std::forward<decltype(inner)>(inner)...);
-        },
-        std::forward<Args>(args)...);
+    auto rv =
+        folly::detail::callWithExtractedKey<key_type, mapped_type, UsableAsKey>(
+            table_.alloc(),
+            [&](auto&&... inner) {
+              return table_.tryEmplaceValue(
+                  std::forward<decltype(inner)>(inner)...);
+            },
+            std::forward<Args>(args)...);
     return std::make_pair(table_.makeIter(rv.first), rv.second);
   }
 
+  /**
+   * Add an element by constructing it in-place.
+   * @methodset Modifiers
+   *
+   * Does nothing if the key already exists.
+   */
   template <typename... Args>
   std::pair<iterator, bool> try_emplace(key_type const& key, Args&&... args) {
     auto rv = table_.tryEmplaceValue(
@@ -442,9 +522,34 @@ class F14BasicMap {
     return std::make_pair(table_.makeIter(rv.first), rv.second);
   }
 
+  /// @copydoc try_emplace
   template <typename... Args>
-  iterator
-  try_emplace(const_iterator /*hint*/, key_type const& key, Args&&... args) {
+  std::pair<iterator, bool> try_emplace_token(
+      F14HashToken const& token, key_type const& key, Args&&... args) {
+    auto rv = table_.tryEmplaceValueWithToken(
+        token,
+        key,
+        std::piecewise_construct,
+        std::forward_as_tuple(key),
+        std::forward_as_tuple(std::forward<Args>(args)...));
+    return std::make_pair(table_.makeIter(rv.first), rv.second);
+  }
+
+  template <typename... Args>
+  std::pair<iterator, bool> try_emplace_token(
+      F14HashToken const& token, key_type&& key, Args&&... args) {
+    auto rv = table_.tryEmplaceValueWithToken(
+        token,
+        key,
+        std::piecewise_construct,
+        std::forward_as_tuple(std::move(key)),
+        std::forward_as_tuple(std::forward<Args>(args)...));
+    return std::make_pair(table_.makeIter(rv.first), rv.second);
+  }
+
+  template <typename... Args>
+  iterator try_emplace(
+      const_iterator /*hint*/, key_type const& key, Args&&... args) {
     auto rv = table_.tryEmplaceValue(
         key,
         std::piecewise_construct,
@@ -454,8 +559,8 @@ class F14BasicMap {
   }
 
   template <typename... Args>
-  iterator
-  try_emplace(const_iterator /*hint*/, key_type&& key, Args&&... args) {
+  iterator try_emplace(
+      const_iterator /*hint*/, key_type&& key, Args&&... args) {
     auto rv = table_.tryEmplaceValue(
         key,
         std::piecewise_construct,
@@ -466,8 +571,7 @@ class F14BasicMap {
 
   template <typename K, typename... Args>
   EnableHeterogeneousInsert<K, std::pair<iterator, bool>> try_emplace(
-      K&& key,
-      Args&&... args) {
+      K&& key, Args&&... args) {
     auto rv = table_.tryEmplaceValue(
         key,
         std::piecewise_construct,
@@ -476,45 +580,135 @@ class F14BasicMap {
     return std::make_pair(table_.makeIter(rv.first), rv.second);
   }
 
+  template <typename K, typename... Args>
+  EnableHeterogeneousInsert<K, std::pair<iterator, bool>> try_emplace_token(
+      F14HashToken const& token, K&& key, Args&&... args) {
+    auto rv = table_.tryEmplaceValueWithToken(
+        token,
+        key,
+        std::piecewise_construct,
+        std::forward_as_tuple(std::forward<K>(key)),
+        std::forward_as_tuple(std::forward<Args>(args)...));
+    return std::make_pair(table_.makeIter(rv.first), rv.second);
+  }
+
+  /**
+   * Remove element at a specific position (iterator).
+   * @overloadbrief Remove elements.
+   * @methodset Modifiers
+   */
   FOLLY_ALWAYS_INLINE iterator erase(const_iterator pos) {
+    return eraseInto(pos, [](key_type&&, mapped_type&&) {});
+  }
+
+  /**
+   * Remove element at a specific position (iterator).
+   *
+   * This form avoids ambiguity when key_type has a templated constructor
+   * that accepts const_iterator
+   */
+  FOLLY_ALWAYS_INLINE iterator erase(iterator pos) {
+    return eraseInto(pos, [](key_type&&, mapped_type&&) {});
+  }
+
+  /// Remove a range of elements.
+  iterator erase(const_iterator first, const_iterator last) {
+    return eraseInto(first, last, [](key_type&&, mapped_type&&) {});
+  }
+
+  /// Remove a specific key.
+  size_type erase(key_type const& key) {
+    return eraseInto(key, [](key_type&&, mapped_type&&) {});
+  }
+
+  /// Remove a key, using a heterogeneous representation.
+  template <typename K>
+  EnableHeterogeneousErase<K, size_type> erase(K const& key) {
+    return eraseInto(key, [](key_type&&, mapped_type&&) {});
+  }
+
+ protected:
+  template <typename BeforeDestroy>
+  FOLLY_ALWAYS_INLINE void tableEraseIterInto(
+      ItemIter pos, BeforeDestroy&& beforeDestroy) {
+    table_.eraseIterInto(pos, [&](value_type&& v) {
+      auto p = Policy::moveValue(v);
+      beforeDestroy(std::move(p.first), std::move(p.second));
+    });
+  }
+
+  template <typename K, typename BeforeDestroy>
+  FOLLY_ALWAYS_INLINE std::size_t tableEraseKeyInto(
+      K const& key, BeforeDestroy&& beforeDestroy) {
+    return table_.eraseKeyInto(key, [&](value_type&& v) {
+      auto p = Policy::moveValue(v);
+      beforeDestroy(std::move(p.first), std::move(p.second));
+    });
+  }
+
+ public:
+  /**
+   * Callback-erase a single iterator.
+   * @overloadbrief Erase with pre-destruction callback.
+   * @methodset Modifiers
+   *
+   * eraseInto contains the same overloads as erase but provides
+   * an additional callback argument which is called with an rvalue
+   * reference (not const) to the key and an rvalue reference to the
+   * mapped value directly before it is destroyed. This can be used
+   * to extract an entry out of a F14Map while avoiding a copy.
+   */
+  template <typename BeforeDestroy>
+  FOLLY_ALWAYS_INLINE iterator
+  eraseInto(const_iterator pos, BeforeDestroy&& beforeDestroy) {
     // If we are inlined then gcc and clang can optimize away all of the
     // work of itemPos.advance() if our return value is discarded.
     auto itemPos = table_.unwrapIter(pos);
-    table_.eraseIter(itemPos);
+    tableEraseIterInto(itemPos, beforeDestroy);
     itemPos.advanceLikelyDead();
     return table_.makeIter(itemPos);
   }
 
-  // This form avoids ambiguity when key_type has a templated constructor
-  // that accepts const_iterator
-  FOLLY_ALWAYS_INLINE iterator erase(iterator pos) {
-    auto itemPos = table_.unwrapIter(pos);
-    table_.eraseIter(itemPos);
-    itemPos.advanceLikelyDead();
-    return table_.makeIter(itemPos);
+  /// This form avoids ambiguity when key_type has a templated constructor
+  /// that accepts const_iterator
+  template <typename BeforeDestroy>
+  FOLLY_ALWAYS_INLINE iterator
+  eraseInto(iterator pos, BeforeDestroy&& beforeDestroy) {
+    const_iterator cpos{pos};
+    return eraseInto(cpos, beforeDestroy);
   }
 
-  iterator erase(const_iterator first, const_iterator last) {
+  /// Callback-erase a range of values.
+  template <typename BeforeDestroy>
+  iterator eraseInto(
+      const_iterator first,
+      const_iterator last,
+      BeforeDestroy&& beforeDestroy) {
     auto itemFirst = table_.unwrapIter(first);
     auto itemLast = table_.unwrapIter(last);
     while (itemFirst != itemLast) {
-      table_.eraseIter(itemFirst);
+      tableEraseIterInto(itemFirst, beforeDestroy);
       itemFirst.advance();
     }
     return table_.makeIter(itemFirst);
   }
 
-  size_type erase(key_type const& key) {
-    return table_.eraseKey(key);
+  template <typename BeforeDestroy>
+  size_type eraseInto(key_type const& key, BeforeDestroy&& beforeDestroy) {
+    return tableEraseKeyInto(key, beforeDestroy);
   }
 
-  template <typename K>
-  EnableHeterogeneousErase<K, size_type> erase(K const& key) {
-    return table_.eraseKey(key);
+  /// Callback-erase a specific key, using a heterogeneous representation.
+  template <typename K, typename BeforeDestroy>
+  EnableHeterogeneousErase<K, size_type> eraseInto(
+      K const& key, BeforeDestroy&& beforeDestroy) {
+    return tableEraseKeyInto(key, beforeDestroy);
   }
 
   //// PUBLIC - Lookup
 
+  /// Get a value for a key
+  /// @methodset Element Access
   FOLLY_ALWAYS_INLINE mapped_type& at(key_type const& key) {
     return at(*this, key);
   }
@@ -533,6 +727,8 @@ class F14BasicMap {
     return at(*this, key);
   }
 
+  /// Get a value for a key; create the value if it doesn't already exist
+  /// @methodset Element Access
   mapped_type& operator[](key_type const& key) {
     return try_emplace(key).first->second;
   }
@@ -546,6 +742,8 @@ class F14BasicMap {
     return try_emplace(std::forward<K>(key)).first->second;
   }
 
+  /// @overloadbrief Number of elements matching the given key.
+  /// @methodset Lookup
   FOLLY_ALWAYS_INLINE size_type count(key_type const& key) const {
     return contains(key) ? 1 : 0;
   }
@@ -556,33 +754,74 @@ class F14BasicMap {
     return contains(key) ? 1 : 0;
   }
 
-  // prehash(key) does the work of evaluating hash_function()(key)
-  // (including additional bit-mixing for non-avalanching hash functions),
-  // wraps the result of that work in a token for later reuse, and
-  // begins prefetching the first steps of looking for key into the
-  // local CPU cache.
-  //
-  // The returned token may be used at any time, may be used more than
-  // once, and may be used in other F14 sets and maps.  Tokens are
-  // transferrable between any F14 containers (maps and sets) with the
-  // same key_type and equal hash_function()s.
-  //
-  // Hash tokens are not hints -- it is a bug to call any method on this
-  // class with a token t and key k where t isn't the result of a call
-  // to prehash(k2) with k2 == k.
+  /**
+   * @overloadbrief Prehash a key.
+   * @methodset Lookup
+   *
+   * prehash(key) does the work of evaluating hash_function()(key)
+   * (including additional bit-mixing for non-avalanching hash functions),
+   * and wraps the result of that work in a token for later reuse.
+   *
+   * The returned token may be used at any time, may be used more than
+   * once, and may be used in other F14 sets and maps.  Tokens are
+   * transferrable between any F14 containers (maps and sets) with the
+   * same key_type and equal hash_function()s.
+   *
+   * Hash tokens are not hints -- it is a bug to call any method on this
+   * class with a token t and key k where t isn't the result of a call
+   * to prehash(k2) with k2 == k.
+   */
   F14HashToken prehash(key_type const& key) const {
     return table_.prehash(key);
   }
 
+  /// @copydoc prehash
   template <typename K>
   EnableHeterogeneousFind<K, F14HashToken> prehash(K const& key) const {
     return table_.prehash(key);
   }
 
+  /**
+   * @overloadbrief Prefetch cachelines associated with a key.
+   * @methodset Lookup
+   *
+   * prefetch(token) begins prefetching the first steps of looking for key into
+   * the local CPU cache.
+   *
+   * Example Scenario: Loading 2 values from a cold map.
+   * You have a map that is cold, meaning it is out of the local CPU cache,
+   * and you want to load two values from the map. This can be extended to
+   * load N values, but we're loading 2 for simplicity.
+   *
+   * When the map is cold the dominating factor in the latency is loading the
+   * cache line of the entry into the local CPU cache. Using prehash() will
+   * issue these cache line fetches in parallel.  That means that by the time we
+   * finish map.find(token1, key1) the cache lines needed by map.find(token2,
+   * key2) may already be in the local CPU cache. In the best case this will
+   * half the latency.
+   *
+   * It is always okay to call prefetch() before a find() or other lookup
+   * operation, as it only prefetches cache lines that are guaranteed to be
+   * needed by the lookup.
+   *
+   *   std::pair<iterator, iterator> find2(
+   *       auto& map, key_type const& key1, key_type const& key2) {
+   *     auto const token1 = map.prehash(key1);
+   *     map.prefetch(token1);
+   *     auto const token2 = map.prehash(key2);
+   *     map.prefetch(token2);
+   *     return std::make_pair(map.find(token1, key1), map.find(token2, key2));
+   *   }
+   */
+  void prefetch(F14HashToken const& token) const { table_.prefetch(token); }
+
+  /// @overloadbrief Get the iterator for a key.
+  /// @methodset Lookup
   FOLLY_ALWAYS_INLINE iterator find(key_type const& key) {
     return table_.makeIter(table_.find(key));
   }
 
+  /// Get the iterator for a key.
   FOLLY_ALWAYS_INLINE const_iterator find(key_type const& key) const {
     return table_.makeConstIter(table_.find(key));
   }
@@ -610,18 +849,21 @@ class F14BasicMap {
 
   template <typename K>
   FOLLY_ALWAYS_INLINE EnableHeterogeneousFind<K, iterator> find(
-      F14HashToken const& token,
-      K const& key) {
+      F14HashToken const& token, K const& key) {
     return table_.makeIter(table_.find(token, key));
   }
 
   template <typename K>
   FOLLY_ALWAYS_INLINE EnableHeterogeneousFind<K, const_iterator> find(
-      F14HashToken const& token,
-      K const& key) const {
+      F14HashToken const& token, K const& key) const {
     return table_.makeConstIter(table_.find(token, key));
   }
 
+  /**
+   * @overloadbrief Checks if the container contains an element with the
+   * specific key.
+   * @methodset Lookup
+   */
   FOLLY_ALWAYS_INLINE bool contains(key_type const& key) const {
     return !table_.find(key).atEnd();
   }
@@ -633,18 +875,18 @@ class F14BasicMap {
   }
 
   FOLLY_ALWAYS_INLINE bool contains(
-      F14HashToken const& token,
-      key_type const& key) const {
+      F14HashToken const& token, key_type const& key) const {
     return !table_.find(token, key).atEnd();
   }
 
   template <typename K>
   FOLLY_ALWAYS_INLINE EnableHeterogeneousFind<K, bool> contains(
-      F14HashToken const& token,
-      K const& key) const {
+      F14HashToken const& token, K const& key) const {
     return !table_.find(token, key).atEnd();
   }
 
+  /// @overloadbrief Returns the range of elements matching a specific key.
+  /// @methodset Lookup
   std::pair<iterator, iterator> equal_range(key_type const& key) {
     return equal_range(*this, key);
   }
@@ -668,28 +910,42 @@ class F14BasicMap {
 
   //// PUBLIC - Bucket interface
 
-  std::size_t bucket_count() const noexcept {
-    return table_.bucket_count();
-  }
+  /// The number of buckets in this container.
+  /// @methodset Bucket interface
+  std::size_t bucket_count() const noexcept { return table_.bucket_count(); }
 
+  /// The maximum number of buckets for this container.
+  /// @methodset Bucket interface
   std::size_t max_bucket_count() const noexcept {
     return table_.max_bucket_count();
   }
 
   //// PUBLIC - Hash policy
 
-  float load_factor() const noexcept {
-    return table_.load_factor();
-  }
+  /// Load factor of the underlying hashtable.
+  /// @methodset Hash policy
+  float load_factor() const noexcept { return table_.load_factor(); }
 
-  float max_load_factor() const noexcept {
-    return table_.max_load_factor();
-  }
+  /**
+   * @overloadbrief Load factor control.
+   * Get the maximum load factor for this container.
+   * @methodset Hash policy
+   */
+  float max_load_factor() const noexcept { return table_.max_load_factor(); }
 
-  void max_load_factor(float v) {
-    table_.max_load_factor(v);
-  }
+  /// Set the maximum load factor for this container.
+  /// @methodset Hash policy
+  void max_load_factor(float v) { table_.max_load_factor(v); }
 
+  /**
+   * Rehash this container.
+   * @methodset Hash policy
+   *
+   * This function is provided for compliance with C++'s requirements for
+   * hashtables, but is no better than a simple `reserve` call for F14.
+   *
+   * @param bucketCapcity  The desired capacity across all buckets.
+   */
   void rehash(std::size_t bucketCapacity) {
     // The standard's rehash() requires understanding the max load factor,
     // which is easy to get wrong.  Since we don't actually allow adjustment
@@ -697,62 +953,82 @@ class F14BasicMap {
     reserve(bucketCapacity);
   }
 
-  void reserve(std::size_t capacity) {
-    table_.reserve(capacity);
-  }
+  /**
+   * Pre-allocate space for at least this many elements.
+   * @methodset Capacity
+   *
+   * @param capacity  The number of elements to pre-allocate space for.
+   */
+  void reserve(std::size_t capacity) { table_.reserve(capacity); }
 
   //// PUBLIC - Observers
 
-  hasher hash_function() const {
-    return table_.hasher();
-  }
+  /// Get the hasher.
+  /// @methodset Observers
+  hasher hash_function() const { return table_.hasher(); }
 
-  key_equal key_eq() const {
-    return table_.keyEqual();
-  }
+  /// Get the key_equal.
+  /// @methodset Observers
+  key_equal key_eq() const { return table_.keyEqual(); }
 
   //// PUBLIC - F14 Extensions
 
-  // containsEqualValue returns true iff there is an element in the map
-  // that compares equal to value using operator==.  It is undefined
-  // behavior to call this function if operator== on key_type can ever
-  // return true when the same keys passed to key_eq() would return false
-  // (the opposite is allowed).
+  /**
+   * Checks for a value using operator==
+   * @methodset Lookup
+   *
+   * containsEqualValue returns true iff there is an element in the map
+   * that compares equal to value using operator==.  It is undefined
+   * behavior to call this function if operator== on key_type can ever
+   * return true when the same keys passed to key_eq() would return false
+   * (the opposite is allowed).
+   */
   bool containsEqualValue(value_type const& value) const {
     auto it = table_.findMatching(
         value.first, [&](auto& key) { return value.first == key; });
     return !it.atEnd() && value.second == table_.valueAtItem(it.citem()).second;
   }
 
-  // Get memory footprint, not including sizeof(*this).
+  /// Get memory footprint, not including sizeof(*this).
+  /// @methodset Capacity
   std::size_t getAllocatedMemorySize() const {
     return table_.getAllocatedMemorySize();
   }
 
-  // Enumerates classes of allocated memory blocks currently owned
-  // by this table, calling visitor(allocationSize, allocationCount).
-  // This can be used to get a more accurate indication of memory footprint
-  // than getAllocatedMemorySize() if you have some way of computing the
-  // internal fragmentation of the allocator, such as JEMalloc's nallocx.
-  // The visitor might be called twice with the same allocationSize. The
-  // visitor's computation should produce the same result for visitor(8,
-  // 2) as for two calls to visitor(8, 1), for example.  The visitor may
-  // be called with a zero allocationCount.
+  /**
+   * In-depth memory analysis.
+   * @methodset Capacity
+   *
+   * Enumerates classes of allocated memory blocks currently owned
+   * by this table, calling visitor(allocationSize, allocationCount).
+   * This can be used to get a more accurate indication of memory footprint
+   * than getAllocatedMemorySize() if you have some way of computing the
+   * internal fragmentation of the allocator, such as JEMalloc's nallocx.
+   * The visitor might be called twice with the same allocationSize. The
+   * visitor's computation should produce the same result for visitor(8,
+   * 2) as for two calls to visitor(8, 1), for example.  The visitor may
+   * be called with a zero allocationCount.
+   */
   template <typename V>
   void visitAllocationClasses(V&& visitor) const {
     return table_.visitAllocationClasses(visitor);
   }
 
-  // Calls visitor with two value_type const*, b and e, such that every
-  // entry in the table is included in exactly one of the ranges [b,e).
-  // This can be used to efficiently iterate elements in bulk when crossing
-  // an API boundary that supports contiguous blocks of items.
+  /**
+   * Visit contiguous ranges of elements.
+   * @methodset Iterators
+   *
+   * Calls visitor with two value_type const*, b and e, such that every
+   * entry in the table is included in exactly one of the ranges [b,e).
+   * This can be used to efficiently iterate elements in bulk when crossing
+   * an API boundary that supports contiguous blocks of items.
+   */
   template <typename V>
   void visitContiguousRanges(V&& visitor) const;
 
-  F14TableStats computeStats() const noexcept {
-    return table_.computeStats();
-  }
+  /// Get stats.
+  /// @methodset Hash policy
+  F14TableStats computeStats() const noexcept { return table_.computeStats(); }
 
  private:
   template <typename Self, typename K>
@@ -818,15 +1094,112 @@ class F14ValueMap
     return *this;
   }
 
+  /// Swaps contained objects with another F14Map
+  /// @methodset Modifiers
   void swap(F14ValueMap& rhs) noexcept(Policy::kSwapIsNoexcept) {
     this->table_.swap(rhs.table_);
   }
 
+  /**
+   * Visit contiguous ranges of elements.
+   * @methodset Iterators
+   *
+   * Calls visitor with two value_type const*, b and e, such that every
+   * entry in the table is included in exactly one of the ranges [b,e).
+   * This can be used to efficiently iterate elements in bulk when crossing
+   * an API boundary that supports contiguous blocks of items.
+   */
   template <typename V>
   void visitContiguousRanges(V&& visitor) const {
     this->table_.visitContiguousItemRanges(visitor);
   }
 };
+
+#if FOLLY_HAS_DEDUCTION_GUIDES
+template <
+    typename InputIt,
+    typename Hasher = f14::DefaultHasher<iterator_key_type_t<InputIt>>,
+    typename KeyEqual = f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    typename Alloc = f14::DefaultAlloc<iterator_value_type_t<InputIt>>,
+    typename = detail::RequireInputIterator<InputIt>,
+    // Next two constraints are necessary to disambiguate from next constructor
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireNotAllocator<KeyEqual>,
+    typename = detail::RequireAllocator<Alloc>>
+F14ValueMap(
+    InputIt, InputIt, std::size_t = {}, Hasher = {}, KeyEqual = {}, Alloc = {})
+    -> F14ValueMap<
+        iterator_key_type_t<InputIt>,
+        iterator_mapped_type_t<InputIt>,
+        Hasher,
+        KeyEqual,
+        Alloc>;
+
+template <
+    typename InputIt,
+    typename Alloc,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireAllocator<Alloc>>
+F14ValueMap(InputIt, InputIt, std::size_t, Alloc) -> F14ValueMap<
+    iterator_key_type_t<InputIt>,
+    iterator_mapped_type_t<InputIt>,
+    f14::DefaultHasher<iterator_key_type_t<InputIt>>,
+    f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    Alloc>;
+
+template <
+    typename InputIt,
+    typename Hasher,
+    typename Alloc,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireAllocator<Alloc>>
+F14ValueMap(InputIt, InputIt, std::size_t, Hasher, Alloc) -> F14ValueMap<
+    iterator_key_type_t<InputIt>,
+    iterator_mapped_type_t<InputIt>,
+    Hasher,
+    f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Hasher = f14::DefaultHasher<Key>,
+    typename KeyEqual = f14::DefaultKeyEqual<Key>,
+    typename Alloc = f14::DefaultAlloc<std::pair<const Key, Mapped>>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireNotAllocator<KeyEqual>,
+    typename = detail::RequireAllocator<Alloc>>
+F14ValueMap(
+    std::initializer_list<std::pair<Key, Mapped>>,
+    std::size_t = {},
+    Hasher = {},
+    KeyEqual = {},
+    Alloc = {}) -> F14ValueMap<Key, Mapped, Hasher, KeyEqual, Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Alloc,
+    typename = detail::RequireAllocator<Alloc>>
+F14ValueMap(std::initializer_list<std::pair<Key, Mapped>>, std::size_t, Alloc)
+    -> F14ValueMap<
+        Key,
+        Mapped,
+        f14::DefaultHasher<Key>,
+        f14::DefaultKeyEqual<Key>,
+        Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Hasher,
+    typename Alloc,
+    typename = detail::RequireAllocator<Alloc>>
+F14ValueMap(
+    std::initializer_list<std::pair<Key, Mapped>>, std::size_t, Hasher, Alloc)
+    -> F14ValueMap<Key, Mapped, Hasher, f14::DefaultKeyEqual<Key>, Alloc>;
+#endif
 
 template <
     typename Key,
@@ -866,10 +1239,20 @@ class F14NodeMap
     return *this;
   }
 
+  /// @methodset Modifiers
   void swap(F14NodeMap& rhs) noexcept(Policy::kSwapIsNoexcept) {
     this->table_.swap(rhs.table_);
   }
 
+  /**
+   * Visit contiguous ranges of elements.
+   * @methodset Iterators
+   *
+   * Calls visitor with two value_type const*, b and e, such that every
+   * entry in the table is included in exactly one of the ranges [b,e).
+   * This can be used to efficiently iterate elements in bulk when crossing
+   * an API boundary that supports contiguous blocks of items.
+   */
   template <typename V>
   void visitContiguousRanges(V&& visitor) const {
     this->table_.visitItems([&](typename Policy::Item ptr) {
@@ -880,6 +1263,91 @@ class F14NodeMap
 
   // TODO extract and node_handle insert
 };
+
+#if FOLLY_HAS_DEDUCTION_GUIDES
+template <
+    typename InputIt,
+    typename Hasher = f14::DefaultHasher<iterator_key_type_t<InputIt>>,
+    typename KeyEqual = f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    typename Alloc = f14::DefaultAlloc<iterator_value_type_t<InputIt>>,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireNotAllocator<KeyEqual>,
+    typename = detail::RequireAllocator<Alloc>>
+F14NodeMap(
+    InputIt, InputIt, std::size_t = {}, Hasher = {}, KeyEqual = {}, Alloc = {})
+    -> F14NodeMap<
+        iterator_key_type_t<InputIt>,
+        iterator_mapped_type_t<InputIt>,
+        Hasher,
+        KeyEqual,
+        Alloc>;
+
+template <
+    typename InputIt,
+    typename Alloc,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireAllocator<Alloc>>
+F14NodeMap(InputIt, InputIt, std::size_t, Alloc) -> F14NodeMap<
+    iterator_key_type_t<InputIt>,
+    iterator_mapped_type_t<InputIt>,
+    f14::DefaultHasher<iterator_key_type_t<InputIt>>,
+    f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    Alloc>;
+
+template <
+    typename InputIt,
+    typename Hasher,
+    typename Alloc,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireAllocator<Alloc>>
+F14NodeMap(InputIt, InputIt, std::size_t, Hasher, Alloc) -> F14NodeMap<
+    iterator_key_type_t<InputIt>,
+    iterator_mapped_type_t<InputIt>,
+    Hasher,
+    f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Hasher = f14::DefaultHasher<Key>,
+    typename KeyEqual = f14::DefaultKeyEqual<Key>,
+    typename Alloc = f14::DefaultAlloc<std::pair<const Key, Mapped>>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireNotAllocator<KeyEqual>,
+    typename = detail::RequireAllocator<Alloc>>
+F14NodeMap(
+    std::initializer_list<std::pair<Key, Mapped>>,
+    std::size_t = {},
+    Hasher = {},
+    KeyEqual = {},
+    Alloc = {}) -> F14NodeMap<Key, Mapped, Hasher, KeyEqual, Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Alloc,
+    typename = detail::RequireAllocator<Alloc>>
+F14NodeMap(std::initializer_list<std::pair<Key, Mapped>>, std::size_t, Alloc)
+    -> F14NodeMap<
+        Key,
+        Mapped,
+        f14::DefaultHasher<Key>,
+        f14::DefaultKeyEqual<Key>,
+        Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Hasher,
+    typename Alloc,
+    typename = detail::RequireAllocator<Alloc>>
+F14NodeMap(
+    std::initializer_list<std::pair<Key, Mapped>>, std::size_t, Hasher, Alloc)
+    -> F14NodeMap<Key, Mapped, Hasher, f14::DefaultKeyEqual<Key>, Alloc>;
+#endif
 
 namespace f14 {
 namespace detail {
@@ -911,25 +1379,28 @@ class F14VectorMapImpl : public F14BasicMap<MapPolicyWithDefaults<
  private:
   using Super = F14BasicMap<Policy>;
 
+  template <typename K>
+  using IsIter = Disjunction<
+      std::is_same<typename Policy::Iter, remove_cvref_t<K>>,
+      std::is_same<typename Policy::ConstIter, remove_cvref_t<K>>,
+      std::is_same<typename Policy::ReverseIter, remove_cvref_t<K>>,
+      std::is_same<typename Policy::ConstReverseIter, remove_cvref_t<K>>>;
+
   template <typename K, typename T>
   using EnableHeterogeneousVectorErase = std::enable_if_t<
-      EligibleForHeterogeneousFind<
-          typename Policy::Value,
-          typename Policy::Hasher,
-          typename Policy::KeyEqual,
-          K>::value &&
-          !std::is_same<typename Policy::Iter, remove_cvref_t<K>>::value &&
-          !std::is_same<typename Policy::ConstIter, remove_cvref_t<K>>::value &&
-          !std::is_same<typename Policy::ReverseIter, remove_cvref_t<K>>::
-              value &&
-          !std::is_same<typename Policy::ConstReverseIter, remove_cvref_t<K>>::
-              value,
+      ::folly::detail::EligibleForHeterogeneousFind<
+          Key,
+          Hasher,
+          KeyEqual,
+          std::conditional_t<IsIter<K>::value, Key, K>>::value &&
+          !IsIter<K>::value,
       T>;
 
  public:
   using typename Super::const_iterator;
   using typename Super::iterator;
   using typename Super::key_type;
+  using typename Super::mapped_type;
   using typename Super::value_type;
 
   F14VectorMapImpl() = default;
@@ -942,28 +1413,26 @@ class F14VectorMapImpl : public F14BasicMap<MapPolicyWithDefaults<
     return *this;
   }
 
-  iterator begin() {
-    return this->table_.linearBegin(this->size());
-  }
-  const_iterator begin() const {
-    return cbegin();
-  }
+  /// @methodset Iterators
+  iterator begin() { return this->table_.linearBegin(this->size()); }
+  /// @methodset Iterators
+  const_iterator begin() const { return cbegin(); }
+  /// @methodset Iterators
   const_iterator cbegin() const {
     return this->table_.linearBegin(this->size());
   }
 
-  iterator end() {
-    return this->table_.linearEnd();
-  }
-  const_iterator end() const {
-    return cend();
-  }
-  const_iterator cend() const {
-    return this->table_.linearEnd();
-  }
+  /// @methodset Iterators
+  iterator end() { return this->table_.linearEnd(); }
+  /// @methodset Iterators
+  const_iterator end() const { return cend(); }
+  /// @methodset Iterators
+  const_iterator cend() const { return this->table_.linearEnd(); }
 
  private:
-  void eraseUnderlying(typename Policy::ItemIter underlying) {
+  template <typename BeforeDestroy>
+  void eraseUnderlying(
+      typename Policy::ItemIter underlying, BeforeDestroy&& beforeDestroy) {
     Alloc& a = this->table_.alloc();
     auto values = this->table_.values_;
 
@@ -971,7 +1440,7 @@ class F14VectorMapImpl : public F14BasicMap<MapPolicyWithDefaults<
     auto index = underlying.item();
     // The item still needs to be hashable during this call, so we must destroy
     // the value _afterwards_.
-    this->table_.eraseIter(underlying);
+    this->tableEraseIterInto(underlying, beforeDestroy);
     Policy::AllocTraits::destroy(a, std::addressof(values[index]));
 
     // move the last element in values_ down and fix up the inbound index
@@ -986,49 +1455,111 @@ class F14VectorMapImpl : public F14BasicMap<MapPolicyWithDefaults<
     }
   }
 
-  template <typename K>
-  std::size_t eraseUnderlyingKey(K const& key) {
+  template <typename K, typename BeforeDestroy>
+  std::size_t eraseUnderlyingKey(K const& key, BeforeDestroy&& beforeDestroy) {
     auto underlying = this->table_.find(key);
     if (underlying.atEnd()) {
       return 0;
     } else {
-      eraseUnderlying(underlying);
+      eraseUnderlying(underlying, beforeDestroy);
       return 1;
     }
   }
 
  public:
+  /**
+   * Remove element at a specific position (iterator).
+   * @overloadbrief Remove elements.
+   * @methodset Modifiers
+   */
   FOLLY_ALWAYS_INLINE iterator erase(const_iterator pos) {
-    auto index = this->table_.iterToIndex(pos);
-    auto underlying = this->table_.find(VectorContainerIndexSearch{index});
-    eraseUnderlying(underlying);
-    return index == 0 ? end() : this->table_.indexToIter(index - 1);
+    return eraseInto(pos, [](key_type&&, mapped_type&&) {});
   }
 
   // This form avoids ambiguity when key_type has a templated constructor
   // that accepts const_iterator
   FOLLY_ALWAYS_INLINE iterator erase(iterator pos) {
-    const_iterator cpos{pos};
-    return erase(cpos);
+    return eraseInto(pos, [](key_type&&, mapped_type&&) {});
   }
 
+  /// Remove a range of elements.
   iterator erase(const_iterator first, const_iterator last) {
+    return eraseInto(first, last, [](key_type&&, mapped_type&&) {});
+  }
+
+  /// Remove a specific key.
+  std::size_t erase(key_type const& key) {
+    return eraseInto(key, [](key_type&&, mapped_type&&) {});
+  }
+
+  /// Remove a key, using a heterogeneous representation.
+  template <typename K>
+  EnableHeterogeneousVectorErase<K, std::size_t> erase(K const& key) {
+    return eraseInto(key, [](key_type&&, mapped_type&&) {});
+  }
+
+  /**
+   * Callback-erase a single iterator.
+   * @overloadbrief Erase with pre-destruction callback.
+   * @methodset Modifiers
+   *
+   * Like erase, but with an additional callback argument which is called with
+   * an rvalue reference to the item directly before it is destroyed. This can
+   * be used to extract an item out of a F14Set while avoiding a copy.
+   */
+  template <typename BeforeDestroy>
+  FOLLY_ALWAYS_INLINE iterator
+  eraseInto(const_iterator pos, BeforeDestroy&& beforeDestroy) {
+    auto index = this->table_.iterToIndex(pos);
+    auto underlying = this->table_.find(VectorContainerIndexSearch{index});
+    eraseUnderlying(underlying, beforeDestroy);
+    return index == 0 ? end() : this->table_.indexToIter(index - 1);
+  }
+
+  // This form avoids ambiguity when key_type has a templated constructor
+  // that accepts const_iterator
+  template <typename BeforeDestroy>
+  FOLLY_ALWAYS_INLINE iterator
+  eraseInto(iterator pos, BeforeDestroy&& beforeDestroy) {
+    const_iterator cpos{pos};
+    return eraseInto(cpos, beforeDestroy);
+  }
+
+  /// Callback-erase a range of values.
+  template <typename BeforeDestroy>
+  iterator eraseInto(
+      const_iterator first,
+      const_iterator last,
+      BeforeDestroy&& beforeDestroy) {
     while (first != last) {
-      first = erase(first);
+      first = eraseInto(first, beforeDestroy);
     }
     auto index = this->table_.iterToIndex(first);
     return index == 0 ? end() : this->table_.indexToIter(index - 1);
   }
 
-  std::size_t erase(key_type const& key) {
-    return eraseUnderlyingKey(key);
+  /// Callback-erase a specific key.
+  template <typename BeforeDestroy>
+  std::size_t eraseInto(key_type const& key, BeforeDestroy&& beforeDestroy) {
+    return eraseUnderlyingKey(key, beforeDestroy);
   }
 
-  template <typename K>
-  EnableHeterogeneousVectorErase<K, std::size_t> erase(K const& key) {
-    return eraseUnderlyingKey(key);
+  /// Callback-erase a specific key, using a heterogeneous representation.
+  template <typename K, typename BeforeDestroy>
+  EnableHeterogeneousVectorErase<K, std::size_t> eraseInto(
+      K const& key, BeforeDestroy&& beforeDestroy) {
+    return eraseUnderlyingKey(key, beforeDestroy);
   }
 
+  /**
+   * Visit contiguous ranges of elements.
+   * @methodset Iterators
+   *
+   * Calls visitor with two value_type const*, b and e, such that every
+   * entry in the table is included in exactly one of the ranges [b,e).
+   * This can be used to efficiently iterate elements in bulk when crossing
+   * an API boundary that supports contiguous blocks of items.
+   */
   template <typename V>
   void visitContiguousRanges(V&& visitor) const {
     auto n = this->table_.size();
@@ -1074,6 +1605,7 @@ class F14VectorMap : public f14::detail::F14VectorMapImpl<
     return *this;
   }
 
+  /// @methodset Modifiers
   void swap(F14VectorMap& rhs) noexcept(Super::Policy::kSwapIsNoexcept) {
     this->table_.swap(rhs.table_);
   }
@@ -1104,48 +1636,131 @@ class F14VectorMap : public f14::detail::F14VectorMapImpl<
   // reverse-iterating.  You can write that as map.erase(map.iter(riter))
   // if you really need it.
 
-  reverse_iterator rbegin() {
-    return this->table_.values_;
-  }
-  const_reverse_iterator rbegin() const {
-    return crbegin();
-  }
-  const_reverse_iterator crbegin() const {
-    return this->table_.values_;
-  }
+  /// @methodset Iterators
+  reverse_iterator rbegin() { return this->table_.values_; }
+  /// @methodset Iterators
+  const_reverse_iterator rbegin() const { return crbegin(); }
+  /// @methodset Iterators
+  const_reverse_iterator crbegin() const { return this->table_.values_; }
 
-  reverse_iterator rend() {
-    return this->table_.values_ + this->table_.size();
-  }
-  const_reverse_iterator rend() const {
-    return crend();
-  }
+  /// @methodset Iterators
+  reverse_iterator rend() { return this->table_.values_ + this->table_.size(); }
+  /// @methodset Iterators
+  const_reverse_iterator rend() const { return crend(); }
+  /// @methodset Iterators
   const_reverse_iterator crend() const {
     return this->table_.values_ + this->table_.size();
   }
 
-  // explicit conversions between iterator and reverse_iterator
-  iterator iter(reverse_iterator riter) {
-    return this->table_.iter(riter);
-  }
+  /// Explicit conversions between iterator and reverse_iterator
+  /// @methodset Iterators
+  iterator iter(reverse_iterator riter) { return this->table_.iter(riter); }
   const_iterator iter(const_reverse_iterator riter) const {
     return this->table_.iter(riter);
   }
 
-  reverse_iterator riter(iterator it) {
-    return this->table_.riter(it);
-  }
+  /// @copydoc iter
+  reverse_iterator riter(iterator it) { return this->table_.riter(it); }
   const_reverse_iterator riter(const_iterator it) const {
     return this->table_.riter(it);
   }
+
+  friend Range<const_reverse_iterator> tag_invoke(
+      order_preserving_reinsertion_view_fn, F14VectorMap const& c) noexcept {
+    return {c.rbegin(), c.rend()};
+  }
 };
 
-template <typename K, typename M, typename H, typename E, typename A>
-Range<typename F14VectorMap<K, M, H, E, A>::const_reverse_iterator>
-order_preserving_reinsertion_view(const F14VectorMap<K, M, H, E, A>& c) {
-  return {c.rbegin(), c.rend()};
-}
+#if FOLLY_HAS_DEDUCTION_GUIDES
+template <
+    typename InputIt,
+    typename Hasher = f14::DefaultHasher<iterator_key_type_t<InputIt>>,
+    typename KeyEqual = f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    typename Alloc = f14::DefaultAlloc<iterator_value_type_t<InputIt>>,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireNotAllocator<KeyEqual>,
+    typename = detail::RequireAllocator<Alloc>>
+F14VectorMap(
+    InputIt, InputIt, std::size_t = {}, Hasher = {}, KeyEqual = {}, Alloc = {})
+    -> F14VectorMap<
+        iterator_key_type_t<InputIt>,
+        iterator_mapped_type_t<InputIt>,
+        Hasher,
+        KeyEqual,
+        Alloc>;
 
+template <
+    typename InputIt,
+    typename Alloc,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireAllocator<Alloc>>
+F14VectorMap(InputIt, InputIt, std::size_t, Alloc) -> F14VectorMap<
+    iterator_key_type_t<InputIt>,
+    iterator_mapped_type_t<InputIt>,
+    f14::DefaultHasher<iterator_key_type_t<InputIt>>,
+    f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    Alloc>;
+
+template <
+    typename InputIt,
+    typename Hasher,
+    typename Alloc,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireAllocator<Alloc>>
+F14VectorMap(InputIt, InputIt, std::size_t, Hasher, Alloc) -> F14VectorMap<
+    iterator_key_type_t<InputIt>,
+    iterator_mapped_type_t<InputIt>,
+    Hasher,
+    f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Hasher = f14::DefaultHasher<Key>,
+    typename KeyEqual = f14::DefaultKeyEqual<Key>,
+    typename Alloc = f14::DefaultAlloc<std::pair<const Key, Mapped>>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireNotAllocator<KeyEqual>,
+    typename = detail::RequireAllocator<Alloc>>
+F14VectorMap(
+    std::initializer_list<std::pair<Key, Mapped>>,
+    std::size_t = {},
+    Hasher = {},
+    KeyEqual = {},
+    Alloc = {}) -> F14VectorMap<Key, Mapped, Hasher, KeyEqual, Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Alloc,
+    typename = detail::RequireAllocator<Alloc>>
+F14VectorMap(std::initializer_list<std::pair<Key, Mapped>>, std::size_t, Alloc)
+    -> F14VectorMap<
+        Key,
+        Mapped,
+        f14::DefaultHasher<Key>,
+        f14::DefaultKeyEqual<Key>,
+        Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Hasher,
+    typename Alloc,
+    typename = detail::RequireAllocator<Alloc>>
+F14VectorMap(
+    std::initializer_list<std::pair<Key, Mapped>>, std::size_t, Hasher, Alloc)
+    -> F14VectorMap<Key, Mapped, Hasher, f14::DefaultKeyEqual<Key>, Alloc>;
+#endif
+
+/**
+ * F14FastMap is, under the hood, either an F14ValueMap or an F14VectorMap.
+ * F14FastMap chooses which of these two representations to use based on the
+ * size of a node.
+ */
 template <
     typename Key,
     typename Mapped,
@@ -1153,7 +1768,7 @@ template <
     typename KeyEqual,
     typename Alloc>
 class F14FastMap : public std::conditional_t<
-                       sizeof(std::pair<Key const, Mapped>) < 24,
+                       (sizeof(std::pair<Key const, Mapped>) < 24),
                        F14ValueMap<Key, Mapped, Hasher, KeyEqual, Alloc>,
                        f14::detail::F14VectorMapImpl<
                            Key,
@@ -1185,172 +1800,102 @@ class F14FastMap : public std::conditional_t<
     return *this;
   }
 
+  /// @methodset Modifiers
   void swap(F14FastMap& rhs) noexcept(Super::Policy::kSwapIsNoexcept) {
     this->table_.swap(rhs.table_);
   }
 };
+
+#if FOLLY_HAS_DEDUCTION_GUIDES
+template <
+    typename InputIt,
+    typename Hasher = f14::DefaultHasher<iterator_key_type_t<InputIt>>,
+    typename KeyEqual = f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    typename Alloc = f14::DefaultAlloc<iterator_value_type_t<InputIt>>,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireNotAllocator<KeyEqual>,
+    typename = detail::RequireAllocator<Alloc>>
+F14FastMap(
+    InputIt, InputIt, std::size_t = {}, Hasher = {}, KeyEqual = {}, Alloc = {})
+    -> F14FastMap<
+        iterator_key_type_t<InputIt>,
+        iterator_mapped_type_t<InputIt>,
+        Hasher,
+        KeyEqual,
+        Alloc>;
+
+template <
+    typename InputIt,
+    typename Alloc,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireAllocator<Alloc>>
+F14FastMap(InputIt, InputIt, std::size_t, Alloc) -> F14FastMap<
+    iterator_key_type_t<InputIt>,
+    iterator_mapped_type_t<InputIt>,
+    f14::DefaultHasher<iterator_key_type_t<InputIt>>,
+    f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    Alloc>;
+
+template <
+    typename InputIt,
+    typename Hasher,
+    typename Alloc,
+    typename = detail::RequireInputIterator<InputIt>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireAllocator<Alloc>>
+F14FastMap(InputIt, InputIt, std::size_t, Hasher, Alloc) -> F14FastMap<
+    iterator_key_type_t<InputIt>,
+    iterator_mapped_type_t<InputIt>,
+    Hasher,
+    f14::DefaultKeyEqual<iterator_key_type_t<InputIt>>,
+    Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Hasher = f14::DefaultHasher<Key>,
+    typename KeyEqual = f14::DefaultKeyEqual<Key>,
+    typename Alloc = f14::DefaultAlloc<std::pair<const Key, Mapped>>,
+    typename = detail::RequireNotAllocator<Hasher>,
+    typename = detail::RequireNotAllocator<KeyEqual>,
+    typename = detail::RequireAllocator<Alloc>>
+F14FastMap(
+    std::initializer_list<std::pair<Key, Mapped>>,
+    std::size_t = {},
+    Hasher = {},
+    KeyEqual = {},
+    Alloc = {}) -> F14FastMap<Key, Mapped, Hasher, KeyEqual, Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Alloc,
+    typename = detail::RequireAllocator<Alloc>>
+F14FastMap(std::initializer_list<std::pair<Key, Mapped>>, std::size_t, Alloc)
+    -> F14FastMap<
+        Key,
+        Mapped,
+        f14::DefaultHasher<Key>,
+        f14::DefaultKeyEqual<Key>,
+        Alloc>;
+
+template <
+    typename Key,
+    typename Mapped,
+    typename Hasher,
+    typename Alloc,
+    typename = detail::RequireAllocator<Alloc>>
+F14FastMap(
+    std::initializer_list<std::pair<Key, Mapped>>, std::size_t, Hasher, Alloc)
+    -> F14FastMap<Key, Mapped, Hasher, f14::DefaultKeyEqual<Key>, Alloc>;
+#endif
 } // namespace folly
 
-#else // !if FOLLY_F14_VECTOR_INTRINSICS_AVAILABLE
+#endif // if FOLLY_F14_VECTOR_INTRINSICS_AVAILABLE
 
 //////// Compatibility for unsupported platforms (not x86_64 and not aarch64)
-
-#include <string>
-#include <unordered_map>
-
-namespace folly {
-
-namespace f14 {
-namespace detail {
-template <typename K, typename M, typename H, typename E, typename A>
-class F14BasicMap : public std::unordered_map<K, M, H, E, A> {
-  using Super = std::unordered_map<K, M, H, E, A>;
-
- public:
-  using typename Super::pointer;
-  using typename Super::value_type;
-
-  F14BasicMap() = default;
-
-  using Super::Super;
-
-  //// PUBLIC - F14 Extensions
-
-  bool containsEqualValue(value_type const& value) const {
-    auto slot = this->bucket(value.first);
-    auto e = this->end(slot);
-    for (auto b = this->begin(slot); b != e; ++b) {
-      if (b->first == value.first) {
-        return b->second == value.second;
-      }
-    }
-    return false;
-  }
-
-  // exact for libstdc++, approximate for others
-  std::size_t getAllocatedMemorySize() const {
-    std::size_t rv = 0;
-    visitAllocationClasses(
-        [&](std::size_t bytes, std::size_t n) { rv += bytes * n; });
-    return rv;
-  }
-
-  // exact for libstdc++, approximate for others
-  template <typename V>
-  void visitAllocationClasses(V&& visitor) const {
-    auto bc = this->bucket_count();
-    if (bc > 1) {
-      visitor(bc * sizeof(pointer), 1);
-    }
-    if (this->size() > 0) {
-      visitor(sizeof(StdNodeReplica<K, value_type, H>), this->size());
-    }
-  }
-
-  template <typename V>
-  void visitContiguousRanges(V&& visitor) const {
-    for (value_type const& entry : *this) {
-      value_type const* b = std::addressof(entry);
-      visitor(b, b + 1);
-    }
-  }
-};
-} // namespace detail
-} // namespace f14
-
-template <
-    typename Key,
-    typename Mapped,
-    typename Hasher,
-    typename KeyEqual,
-    typename Alloc>
-class F14ValueMap
-    : public f14::detail::F14BasicMap<Key, Mapped, Hasher, KeyEqual, Alloc> {
-  using Super = f14::detail::F14BasicMap<Key, Mapped, Hasher, KeyEqual, Alloc>;
-
- public:
-  using typename Super::value_type;
-
-  F14ValueMap() = default;
-
-  using Super::Super;
-
-  F14ValueMap& operator=(std::initializer_list<value_type> ilist) {
-    Super::operator=(ilist);
-    return *this;
-  }
-};
-
-template <
-    typename Key,
-    typename Mapped,
-    typename Hasher,
-    typename KeyEqual,
-    typename Alloc>
-class F14NodeMap
-    : public f14::detail::F14BasicMap<Key, Mapped, Hasher, KeyEqual, Alloc> {
-  using Super = f14::detail::F14BasicMap<Key, Mapped, Hasher, KeyEqual, Alloc>;
-
- public:
-  using typename Super::value_type;
-
-  F14NodeMap() = default;
-
-  using Super::Super;
-
-  F14NodeMap& operator=(std::initializer_list<value_type> ilist) {
-    Super::operator=(ilist);
-    return *this;
-  }
-};
-
-template <
-    typename Key,
-    typename Mapped,
-    typename Hasher,
-    typename KeyEqual,
-    typename Alloc>
-class F14VectorMap
-    : public f14::detail::F14BasicMap<Key, Mapped, Hasher, KeyEqual, Alloc> {
-  using Super = f14::detail::F14BasicMap<Key, Mapped, Hasher, KeyEqual, Alloc>;
-
- public:
-  using typename Super::value_type;
-
-  F14VectorMap() = default;
-
-  using Super::Super;
-
-  F14VectorMap& operator=(std::initializer_list<value_type> ilist) {
-    Super::operator=(ilist);
-    return *this;
-  }
-};
-
-template <
-    typename Key,
-    typename Mapped,
-    typename Hasher,
-    typename KeyEqual,
-    typename Alloc>
-class F14FastMap
-    : public f14::detail::F14BasicMap<Key, Mapped, Hasher, KeyEqual, Alloc> {
-  using Super = f14::detail::F14BasicMap<Key, Mapped, Hasher, KeyEqual, Alloc>;
-
- public:
-  using typename Super::value_type;
-
-  F14FastMap() = default;
-
-  using Super::Super;
-
-  F14FastMap& operator=(std::initializer_list<value_type> ilist) {
-    Super::operator=(ilist);
-    return *this;
-  }
-};
-} // namespace folly
-#endif // if FOLLY_F14_VECTOR_INTRINSICS_AVAILABLE else
+#include <folly/container/detail/F14MapFallback.h>
 
 namespace folly {
 namespace f14 {
@@ -1461,8 +2006,8 @@ template <
     typename E,
     typename A,
     typename Pred>
-void erase_if(F14ValueMap<K, M, H, E, A>& c, Pred pred) {
-  f14::detail::erase_if_impl(c, pred);
+std::size_t erase_if(F14ValueMap<K, M, H, E, A>& c, Pred pred) {
+  return f14::detail::erase_if_impl(c, pred);
 }
 
 template <
@@ -1472,8 +2017,8 @@ template <
     typename E,
     typename A,
     typename Pred>
-void erase_if(F14NodeMap<K, M, H, E, A>& c, Pred pred) {
-  f14::detail::erase_if_impl(c, pred);
+std::size_t erase_if(F14NodeMap<K, M, H, E, A>& c, Pred pred) {
+  return f14::detail::erase_if_impl(c, pred);
 }
 
 template <
@@ -1483,8 +2028,8 @@ template <
     typename E,
     typename A,
     typename Pred>
-void erase_if(F14VectorMap<K, M, H, E, A>& c, Pred pred) {
-  f14::detail::erase_if_impl(c, pred);
+std::size_t erase_if(F14VectorMap<K, M, H, E, A>& c, Pred pred) {
+  return f14::detail::erase_if_impl(c, pred);
 }
 
 template <
@@ -1494,8 +2039,8 @@ template <
     typename E,
     typename A,
     typename Pred>
-void erase_if(F14FastMap<K, M, H, E, A>& c, Pred pred) {
-  f14::detail::erase_if_impl(c, pred);
+std::size_t erase_if(F14FastMap<K, M, H, E, A>& c, Pred pred) {
+  return f14::detail::erase_if_impl(c, pred);
 }
 
 } // namespace folly

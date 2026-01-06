@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -219,8 +219,10 @@ struct PolyExtends : virtual I... {
  *     struct IAddable {
  *       template <class Base>
  *       struct Interface : Base {
- *         friend PolySelf<Base, Decay>
- *         operator+(PolySelf<Base> const& a, PolySelf<Base> const& b) {
+ *         friend folly::PolySelf<Base, folly::PolyDecay>
+ *         operator+(
+ *             folly::PolySelf<Base> const& a,
+ *             folly::PolySelf<Base> const& b) {
  *           return folly::poly_call<0, IAddable>(a, b);
  *         }
  *       };
@@ -237,8 +239,7 @@ struct PolyExtends : virtual I... {
 template <std::size_t N, typename This, typename... As>
 auto poly_call(This&& _this, As&&... as)
     -> decltype(detail::PolyAccess::call<N>(
-        static_cast<This&&>(_this),
-        static_cast<As&&>(as)...)) {
+        static_cast<This&&>(_this), static_cast<As&&>(as)...)) {
   return detail::PolyAccess::call<N>(
       static_cast<This&&>(_this), static_cast<As&&>(as)...);
 }
@@ -275,8 +276,7 @@ template <
     typename... As,
     std::enable_if_t<detail::IsPoly<Poly>::value, int> = 0>
 auto poly_call(Poly&& _this, As&&... as) -> decltype(poly_call<N, I>(
-    static_cast<Poly&&>(_this).get(),
-    static_cast<As&&>(as)...)) {
+    static_cast<Poly&&>(_this).get(), static_cast<As&&>(as)...)) {
   return poly_call<N, I>(
       static_cast<Poly&&>(_this).get(), static_cast<As&&>(as)...);
 }
@@ -297,7 +297,7 @@ template <std::size_t N, class I, typename... As>
  * \tparam T The (unqualified) type to which to cast the `Poly` object.
  * \tparam Poly The type of the `Poly` object.
  * \param that The `Poly` object to be cast.
- * \return A reference to the `T` object stored in or refered to by `that`.
+ * \return A reference to the `T` object stored in or referred to by `that`.
  * \throw BadPolyAccess if `that` is empty.
  * \throw BadPolyCast if `that` does not store or refer to an object of type
  *        `T`.
@@ -473,19 +473,11 @@ struct PolyVal : PolyImpl<I> {
 
   using PolyRoot<I>::vptr_;
 
-  PolyRoot<I>& _polyRoot_() noexcept {
-    return *this;
-  }
-  PolyRoot<I> const& _polyRoot_() const noexcept {
-    return *this;
-  }
+  PolyRoot<I>& _polyRoot_() noexcept { return *this; }
+  PolyRoot<I> const& _polyRoot_() const noexcept { return *this; }
 
-  Data* _data_() noexcept {
-    return PolyAccess::data(*this);
-  }
-  Data const* _data_() const noexcept {
-    return PolyAccess::data(*this);
-  }
+  Data* _data_() noexcept { return PolyAccess::data(*this); }
+  Data const* _data_() const noexcept { return PolyAccess::data(*this); }
 
  public:
   /**
@@ -553,7 +545,7 @@ struct PolyVal : PolyImpl<I> {
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * The implementation of `Poly` for when the interface type is
- * reference-quelified, like `Poly<SemuRegular &>`.
+ * reference-qualified, like `Poly<SemiRegular &>`.
  */
 template <class I>
 struct PolyRef : private PolyImpl<I> {
@@ -562,12 +554,8 @@ struct PolyRef : private PolyImpl<I> {
 
   AddCvrefOf<PolyRoot<I>, I>& _polyRoot_() const noexcept;
 
-  Data* _data_() noexcept {
-    return PolyAccess::data(*this);
-  }
-  Data const* _data_() const noexcept {
-    return PolyAccess::data(*this);
-  }
+  Data* _data_() noexcept { return PolyAccess::data(*this); }
+  Data const* _data_() const noexcept { return PolyAccess::data(*this); }
 
   static constexpr RefType refType() noexcept;
 
@@ -664,16 +652,12 @@ struct PolyRef : private PolyImpl<I> {
   /**
    * Get a reference to the interface, with correct `const`-ness applied.
    */
-  AddCvrefOf<PolyImpl<I>, I>& operator*() const noexcept {
-    return get();
-  }
+  AddCvrefOf<PolyImpl<I>, I>& operator*() const noexcept { return get(); }
 
   /**
    * Get a pointer to the interface, with correct `const`-ness applied.
    */
-  auto operator-> () const noexcept {
-    return &get();
-  }
+  auto operator->() const noexcept { return &get(); }
 };
 
 template <class I>
@@ -722,7 +706,7 @@ using PolyValOrRef = If<std::is_reference<I>::value, PolyRef<I>, PolyVal<I>>;
  * \li A *mapping* from a concrete type to a set of member function bindings.
  *
  * Below is a (heavily commented) example of a simple implementation of a
- * `std::function`-like polymorphic wrapper. Its interface has only a simgle
+ * `std::function`-like polymorphic wrapper. Its interface has only a single
  * member function: `operator()`
  *
  *     // An interface for a callable object of a particular signature, Fun
@@ -1071,7 +1055,7 @@ using PolyValOrRef = If<std::is_reference<I>::value, PolyRef<I>, PolyVal<I>>;
  * added? Adding requires _two_ objects, both of which are type-erased. This
  * interface requires dispatching on both objects, doing the addition only
  * if the types are the same. For this we make use of the `PolySelf` template
- * alias to define an interface that takes more than one object of the the
+ * alias to define an interface that takes more than one object of the
  * erased type.
  *
  *     struct IAddable {

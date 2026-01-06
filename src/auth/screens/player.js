@@ -8,53 +8,54 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { Slider } from "react-native-elements";
+import TrackPlayer from "react-native-track-player";
+import { useTrackPlayerProgress } from "react-native-track-player"; // Corrected path
+import { AuthContext } from "../Context/AuthContext";
+import Modal from "react-native-modal";
+import { StatusBar } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import music from "../../data";
-import { Slider } from "react-native-elements";
-import TrackPlayer from "react-native-track-player";
-import { useTrackPlayerProgress } from 'react-native-track-player/lib/hooks'
-import { AuthContext } from "../Context/AuthContext";
-import Modal from 'react-native-modal'
-import { StatusBar } from "react-native";
-MaterialCommunityIcons.loadFont()
-FontAwesome.loadFont()
+MaterialCommunityIcons.loadFont();
+FontAwesome.loadFont();
 function Player() {
-
-  const { modalVisible, toggleModal,songInfo,playing,setPlaying,toggleMiniPlayer } = useContext(AuthContext)
+  const {
+    modalVisible,
+    toggleModal,
+    songInfo,
+    playing,
+    setPlaying,
+    toggleMiniPlayer,
+  } = useContext(AuthContext);
   // const [playing, setPlaying] = useState(false);
 
   const [progres, setProgress] = useState(0);
 
   const [isSeeking, setIsSeeking] = useState(false);
 
+  const { duration, position } = useTrackPlayerProgress(250);
 
-  const { duration, position } = useTrackPlayerProgress(250)
-
-useLayoutEffect(()=>{
-  toggleMiniPlayer()
-},[])
-
-
+  useLayoutEffect(() => {
+    toggleMiniPlayer();
+  }, []);
 
   useEffect(() => {
     if (!isSeeking && position && duration) {
-      setProgress(position / duration)
+      setProgress(position / duration);
     }
-
-  }, [position, duration])
+  }, [position, duration]);
   //function called when the user starts sliding
 
   const slidingStarted = () => {
-    setIsSeeking(true)
-  }
+    setIsSeeking(true);
+  };
 
   const slidingCompleted = async (value) => {
     await TrackPlayer.seekTo(value * duration);
 
     setProgress(value);
-  }
-
+  };
 
   const getTractData = async () => {
     const state = await TrackPlayer.getState();
@@ -76,62 +77,60 @@ useLayoutEffect(()=>{
     setDuration(Math.round(duration));
   };
 
-
   return (
-    <SafeAreaView >
-   
+    <SafeAreaView>
       <Modal
         isVisible={modalVisible}
-        
         animationIn="slideInUp"
         animationInTiming={300}
         animationOutTiming={500}
         animationOut="slideInUp"
         onBackdropPress={() => {
-          toggleModal()
+          toggleModal();
         }}
         style={{
-          margin: 0
+          margin: 0,
         }}
-        onSwipeComplete={() => { toggleModal() }}
-
+        onSwipeComplete={() => {
+          toggleModal();
+        }}
       >
-
         <View style={styles.container}>
-          <View style={{
-            justifyContent: 'center',
-            alignItems: 'center',
+          <View
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
 
-
-            // width:500
-          }}>
+              // width:500
+            }}
+          >
             <TouchableOpacity
-            
-            onPress={() => {
-              toggleModal()
-              toggleMiniPlayer(true)
-            }}  >
+              onPress={() => {
+                toggleModal();
+                toggleMiniPlayer(true);
+              }}
+            >
               <FontAwesome name="chevron-down" size={20} color="white" />
             </TouchableOpacity>
           </View>
           <Image
             // source={require("../../img/album-arts/death-bed.jpg")}
             source={{ uri: songInfo.artwork }}
-            style={{ width: "100%", height: 320, borderRadius: 25,backgroundColor:'transparent' }}
+            style={{
+              width: "100%",
+              height: 320,
+              borderRadius: 25,
+              backgroundColor: "transparent",
+            }}
           />
           <Text style={styles.title}>{songInfo.title}</Text>
           <Text style={styles.artist}>By {songInfo.artist}</Text>
           <Slider
             value={progres}
-
-
             minimumValue={0}
             maximumValue={1}
-
-
             onSlidingStart={slidingStarted}
             onSlidingComplete={slidingCompleted}
-
             thumbStyle={{
               height: 11,
               width: 11,
@@ -141,13 +140,17 @@ useLayoutEffect(()=>{
           <View
             style={{ flexDirection: "row", justifyContent: "space-between" }}
           >
-            <Text style={styles.timings}>{new Date(position * 1000).toISOString().substr(11, 8)}</Text>
-            <Text style={styles.timings}>{new Date(duration * 1000).toISOString().substr(11, 8)}</Text>
+            <Text style={styles.timings}>
+              {new Date(position * 1000).toISOString().substr(11, 8)}
+            </Text>
+            <Text style={styles.timings}>
+              {new Date(duration * 1000).toISOString().substr(11, 8)}
+            </Text>
           </View>
           <View style={styles.controller}>
             <TouchableOpacity
               onPress={() => {
-                TrackPlayer.seekTo(position- 5)
+                TrackPlayer.seekTo(position - 5);
                 getTractData();
               }}
             >
@@ -180,7 +183,7 @@ useLayoutEffect(()=>{
             <TouchableOpacity
               onPress={() => {
                 // TrackPlayer.skipToNext();
-                TrackPlayer.seekTo(position + 5)
+                TrackPlayer.seekTo(position + 5);
                 getTractData();
               }}
             >
@@ -191,10 +194,7 @@ useLayoutEffect(()=>{
               />
             </TouchableOpacity>
           </View>
-          <View style={styles.volume}>
-       
-
-          </View>
+          <View style={styles.volume}></View>
         </View>
       </Modal>
     </SafeAreaView>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <functional>
 #include <iterator>
+#include <sstream>
 #include <type_traits>
 
 #include <boost/algorithm/string.hpp>
@@ -27,8 +28,8 @@
 #include <folly/Conv.h>
 #include <folly/Portability.h>
 #include <folly/Range.h>
-#include <folly/String.h>
 #include <folly/Unicode.h>
+#include <folly/Utility.h>
 #include <folly/lang/Bits.h>
 #include <folly/portability/Constexpr.h>
 
@@ -53,23 +54,74 @@ parse_error make_parse_error(
 }
 
 struct Printer {
+  // Context class is allows to restore the path to element that we are about to
+  // print so that if error happens we can throw meaningful exception.
+  class Context {
+   public:
+    Context(const Context* parent_context, const dynamic& key)
+        : parent_context_(parent_context), key_(key), is_key_(false) {}
+    Context(const Context* parent_context, const dynamic& key, bool is_key)
+        : parent_context_(parent_context), key_(key), is_key_(is_key) {}
+
+    // Return location description of a context as a chain of keys
+    // ex., '"outherKey"->"innerKey"'.
+    std::string locationDescription() const {
+      std::vector<std::string> keys;
+      const Context* ptr = parent_context_;
+      while (ptr) {
+        keys.push_back(ptr->getName());
+        ptr = ptr->parent_context_;
+      }
+      keys.push_back(getName());
+      std::ostringstream stream;
+      std::reverse_copy(
+          keys.begin(),
+          keys.end() - 1,
+          std::ostream_iterator<std::string>(stream, "->"));
+
+      // Add current key.
+      stream << keys.back();
+      return stream.str();
+    }
+    std::string getName() const {
+      return Printer::toStringOr(key_, "<unprintable>");
+    }
+    std::string typeDescription() const { return is_key_ ? "key" : "value"; }
+
+   private:
+    const Context* const parent_context_;
+    const dynamic& key_;
+    bool is_key_;
+  };
+
   explicit Printer(
-      std::string& out,
-      unsigned* indentLevel,
-      serialization_opts const* opts)
+      std::string& out, unsigned* indentLevel, serialization_opts const* opts)
       : out_(out), indentLevel_(indentLevel), opts_(*opts) {}
 
-  void operator()(dynamic const& v) const {
+  void operator()(dynamic const& v, const Context& context) const {
+    (*this)(v, &context);
+  }
+  void operator()(dynamic const& v, const Context* context) const {
     switch (v.type()) {
       case dynamic::DOUBLE:
-        if (!opts_.allow_nan_inf &&
-            (std::isnan(v.asDouble()) || std::isinf(v.asDouble()))) {
-          throw json::parse_error(
-              "folly::toJson: JSON object value was a "
-              "NaN or INF");
+        if (!opts_.allow_nan_inf) {
+          if (std::isnan(v.asDouble())) {
+            throw json::print_error(
+                "folly::toJson: JSON object value was a NaN when serializing " +
+                contextDescription(context));
+          }
+          if (std::isinf(v.asDouble())) {
+            throw json::print_error(
+                "folly::toJson: JSON object value was an INF when serializing " +
+                contextDescription(context));
+          }
         }
         toAppend(
-            v.asDouble(), &out_, opts_.double_mode, opts_.double_num_digits);
+            v.asDouble(),
+            &out_,
+            opts_.double_mode,
+            opts_.double_num_digits,
+            opts_.double_flags);
         break;
       case dynamic::INT64: {
         auto intval = v.asInt();
@@ -88,13 +140,13 @@ struct Printer {
         out_ += "null";
         break;
       case dynamic::STRING:
-        escapeString(v.asString(), out_, opts_);
+        escapeString(v.stringPiece(), out_, opts_);
         break;
       case dynamic::OBJECT:
-        printObject(v);
+        printObject(v, context);
         break;
       case dynamic::ARRAY:
-        printArray(v);
+        printArray(v, context);
         break;
       default:
         CHECK(0) << "Bad type " << v.type();
@@ -102,28 +154,48 @@ struct Printer {
   }
 
  private:
-  void printKV(const std::pair<const dynamic, dynamic>& p) const {
-    if (!opts_.allow_non_string_keys && !p.first.isString()) {
-      throw json::parse_error(
-          "folly::toJson: JSON object key was not a "
-          "string");
+  void printKV(
+      dynamic const& o,
+      const std::pair<const dynamic, dynamic>& p,
+      const Context* context) const {
+    if (opts_.convert_int_keys && p.first.isInt()) {
+      auto strKey = p.first.asString();
+      if (o.count(strKey)) {
+        throw json::print_error(folly::to<std::string>(
+            "folly::toJson: Source object has integer and string keys "
+            "representing the same value: ",
+            p.first.asInt()));
+      }
+      (*this)(p.first.asString(), Context(context, p.first, true));
+    } else if (!opts_.allow_non_string_keys && !p.first.isString()) {
+      throw json::print_error(
+          "folly::toJson: JSON object key " +
+          toStringOr(p.first, "<unprintable key>") + " was not a string " +
+          (opts_.convert_int_keys ? "or integer " : "") +
+          "when serializing key at " +
+          Context(context, p.first, true).locationDescription());
+    } else {
+      (*this)(p.first, Context(context, p.first, true)); // Key
     }
-    (*this)(p.first);
     mapColon();
-    (*this)(p.second);
+    (*this)(p.second, Context(context, p.first, false)); // Value
   }
 
   template <typename Iterator>
-  void printKVPairs(Iterator begin, Iterator end) const {
-    printKV(*begin);
+  void printKVPairs(
+      dynamic const& o,
+      Iterator begin,
+      Iterator end,
+      const Context* context) const {
+    printKV(o, *begin, context);
     for (++begin; begin != end; ++begin) {
       out_ += ',';
       newline();
-      printKV(*begin);
+      printKV(o, *begin, context);
     }
   }
 
-  void printObject(dynamic const& o) const {
+  void printObject(dynamic const& o, const Context* context) const {
     if (o.empty()) {
       out_ += "{}";
       return;
@@ -146,16 +218,38 @@ struct Printer {
       } else {
         sort_keys_by(refs.begin(), refs.end(), std::less<>());
       }
-      printKVPairs(refs.cbegin(), refs.cend());
+      printKVPairs(o, refs.cbegin(), refs.cend(), context);
     } else {
-      printKVPairs(o.items().begin(), o.items().end());
+      printKVPairs(o, o.items().begin(), o.items().end(), context);
     }
     outdent();
     newline();
     out_ += '}';
   }
 
-  void printArray(dynamic const& a) const {
+  static std::string toStringOr(dynamic const& v, const char* placeholder) {
+    try {
+      std::string result;
+      unsigned indentLevel = 0;
+      serialization_opts opts;
+      opts.allow_nan_inf = true;
+      opts.allow_non_string_keys = true;
+      Printer printer(result, &indentLevel, &opts);
+      printer(v, nullptr);
+      return result;
+    } catch (...) {
+      return placeholder;
+    }
+  }
+
+  static std::string contextDescription(const Context* context) {
+    if (!context) {
+      return "<undefined location>";
+    }
+    return context->typeDescription() + " at " + context->locationDescription();
+  }
+
+  void printArray(dynamic const& a, const Context* context) const {
     if (a.empty()) {
       out_ += "[]";
       return;
@@ -164,11 +258,11 @@ struct Printer {
     out_ += '[';
     indent();
     newline();
-    (*this)(a[0]);
-    for (auto& val : range(std::next(a.begin()), a.end())) {
+    (*this)(a[0], Context(context, dynamic(0)));
+    for (auto it = std::next(a.begin()); it != a.end(); ++it) {
       out_ += ',';
       newline();
-      (*this)(val);
+      (*this)(*it, Context(context, dynamic(std::distance(a.begin(), it))));
     }
     outdent();
     newline();
@@ -190,13 +284,12 @@ struct Printer {
 
   void newline() const {
     if (indentLevel_) {
-      out_ += to<std::string>('\n', std::string(*indentLevel_ * 2, ' '));
+      auto indent = *indentLevel_ * opts_.pretty_formatting_indent_width;
+      out_ += to<std::string>('\n', std::string(indent, ' '));
     }
   }
 
-  void mapColon() const {
-    out_ += indentLevel_ ? ": " : ":";
-  }
+  void mapColon() const { out_ += indentLevel_ ? ": " : ":"; }
 
  private:
   std::string& out_;
@@ -216,13 +309,9 @@ struct Input {
   Input(Input const&) = delete;
   Input& operator=(Input const&) = delete;
 
-  char const* begin() const {
-    return range_.begin();
-  }
+  char const* begin() const { return range_.begin(); }
 
-  unsigned getLineNum() const {
-    return lineNum_;
-  }
+  unsigned getLineNum() const { return lineNum_; }
 
   // Parse ahead for as long as the supplied predicate is satisfied,
   // returning a range of what was skipped.
@@ -287,13 +376,9 @@ struct Input {
     ++*this;
   }
 
-  std::size_t size() const {
-    return range_.size();
-  }
+  std::size_t size() const { return range_.size(); }
 
-  int operator*() const {
-    return current_;
-  }
+  int operator*() const { return current_; }
 
   void operator++() {
     range_.pop_front();
@@ -322,13 +407,11 @@ struct Input {
     return range_.subpiece(0, 16 /* arbitrary */).toString();
   }
 
-  dynamic error(char const* what) const {
+  [[noreturn]] dynamic error(char const* what) const {
     throw json::make_parse_error(lineNum_, context(), what);
   }
 
-  json::serialization_opts const& getOpts() {
-    return opts_;
-  }
+  json::serialization_opts const& getOpts() { return opts_; }
 
   void incrementRecursionLevel() {
     if (currentRecursionLevel_ > opts_.recursion_limit) {
@@ -337,14 +420,10 @@ struct Input {
     currentRecursionLevel_++;
   }
 
-  void decrementRecursionLevel() {
-    currentRecursionLevel_--;
-  }
+  void decrementRecursionLevel() { currentRecursionLevel_--; }
 
  private:
-  void storeCurrent() {
-    current_ = range_.empty() ? EOF : range_.front();
-  }
+  void storeCurrent() { current_ = range_.empty() ? EOF : range_.front(); }
 
  private:
   StringPiece range_;
@@ -360,9 +439,7 @@ class RecursionGuard {
     in_.incrementRecursionLevel();
   }
 
-  ~RecursionGuard() {
-    in_.decrementRecursionLevel();
-  }
+  ~RecursionGuard() { in_.decrementRecursionLevel(); }
 
  private:
   Input& in_;
@@ -372,28 +449,29 @@ dynamic parseValue(Input& in, json::metadata_map* map);
 std::string parseString(Input& in);
 dynamic parseNumber(Input& in);
 
-template <class K>
 void parseObjectKeyValue(
     Input& in,
     dynamic& ret,
-    K&& key,
-    json::metadata_map* map) {
+    dynamic&& key,
+    json::metadata_map* map,
+    bool distinct) {
   auto keyLineNumber = in.getLineNum();
   in.skipWhitespace();
   in.expect(':');
   in.skipWhitespace();
-  K tmp;
-  if (map) {
-    tmp = K(key);
-  }
   auto valueLineNumber = in.getLineNum();
-  ret.insert(std::forward<K>(key), parseValue(in, map));
+  auto value = parseValue(in, map);
+  auto [it, inserted] = ret.try_emplace(std::move(key), std::move(value));
+  if (!inserted) {
+    if (distinct) {
+      in.error("duplicate key inserted");
+    }
+    it->second = std::move(value);
+  }
   if (map) {
-    auto val = ret.get_ptr(tmp);
-    // We just inserted it, so it should be there!
-    DCHECK(val != nullptr);
     map->emplace(
-        val, json::parse_metadata{{{keyLineNumber}}, {{valueLineNumber}}});
+        &it->second,
+        json::parse_metadata{{{keyLineNumber}}, {{valueLineNumber}}});
   }
 }
 
@@ -409,19 +487,21 @@ dynamic parseObject(Input& in, json::metadata_map* map) {
     return ret;
   }
 
+  const auto& opts = in.getOpts();
+  const bool distinct = opts.validate_keys || opts.convert_int_keys;
   for (;;) {
-    if (in.getOpts().allow_trailing_comma && *in == '}') {
+    if (opts.allow_trailing_comma && *in == '}') {
       break;
     }
-    if (*in == '\"') { // string
-      auto key = parseString(in);
-      parseObjectKeyValue(in, ret, std::move(key), map);
-    } else if (!in.getOpts().allow_non_string_keys) {
-      in.error("expected string for object key name");
-    } else {
-      auto key = parseValue(in, map);
-      parseObjectKeyValue(in, ret, std::move(key), map);
+    dynamic key = parseValue(in, map);
+    if (opts.convert_int_keys && key.isInt()) {
+      key = key.asString();
+    } else if (!opts.allow_non_string_keys && !key.isString()) {
+      in.error(
+          opts.convert_int_keys ? "expected string or integer for object key"
+                                : "expected string for object key");
     }
+    parseObjectKeyValue(in, ret, std::move(key), map, distinct);
 
     in.skipWhitespace();
     if (*in != ',') {
@@ -464,7 +544,7 @@ dynamic parseArray(Input& in, json::metadata_map* map) {
     in.skipWhitespace();
   }
   if (map) {
-    for (size_t i = 0; i < ret.size(); i++) {
+    for (size_t i = 0, e = ret.size(); i < e; i++) {
       map->emplace(&ret[i], json::parse_metadata{{{0}}, {{lineNumbers[i]}}});
     }
   }
@@ -490,19 +570,20 @@ dynamic parseNumber(Input& in) {
 
   auto const wasE = *in == 'e' || *in == 'E';
 
-  constexpr const char* maxInt = "9223372036854775807";
-  constexpr const char* minInt = "-9223372036854775808";
-  constexpr auto maxIntLen = constexpr_strlen(maxInt);
-  constexpr auto minIntLen = constexpr_strlen(minInt);
-
   if (*in != '.' && !wasE && in.getOpts().parse_numbers_as_strings) {
     return integral;
   }
 
+  constexpr const char* maxIntStr = "9223372036854775807";
+  constexpr const char* minIntStr = "-9223372036854775808";
+  constexpr auto maxIntLen = constexpr_strlen(maxIntStr);
+  constexpr auto minIntLen = constexpr_strlen(minIntStr);
+  auto extremaLen = negative ? minIntLen : maxIntLen;
+  auto extremaStr = negative ? minIntStr : maxIntStr;
   if (*in != '.' && !wasE) {
-    if (LIKELY(!in.getOpts().double_fallback || integral.size() < maxIntLen) ||
-        (!negative && integral.size() == maxIntLen && integral <= maxInt) ||
-        (negative && integral.size() == minIntLen && integral <= minInt)) {
+    if (FOLLY_LIKELY(
+            !in.getOpts().double_fallback || integral.size() < extremaLen) ||
+        (integral.size() == extremaLen && integral <= extremaStr)) {
       auto val = to<int64_t>(integral);
       in.skipWhitespace();
       return val;
@@ -530,7 +611,7 @@ dynamic parseNumber(Input& in) {
   return val;
 }
 
-std::string decodeUnicodeEscape(Input& in) {
+void decodeUnicodeEscape(Input& in, std::string& out) {
   auto hexVal = [&](int c) -> uint16_t {
     // clang-format off
     return uint16_t(
@@ -557,28 +638,28 @@ std::string decodeUnicodeEscape(Input& in) {
     return ret;
   };
 
-  /*
-   * If the value encoded is in the surrogate pair range, we need to
-   * make sure there is another escape that we can use also.
-   */
-  uint32_t codePoint = readHex();
-  if (codePoint >= 0xd800 && codePoint <= 0xdbff) {
+  //  If the value encoded is in the surrogate pair range, we need to make
+  //  sure there is another escape that we can use also.
+  //
+  //  See the explanation in folly/Unicode.h.
+  uint16_t prefix = readHex();
+  char32_t codePoint = prefix;
+  if (utf16_code_unit_is_high_surrogate(prefix)) {
     if (!in.consume("\\u")) {
       in.error(
           "expected another unicode escape for second half of "
           "surrogate pair");
     }
-    uint16_t second = readHex();
-    if (second >= 0xdc00 && second <= 0xdfff) {
-      codePoint = 0x10000 + ((codePoint & 0x3ff) << 10) + (second & 0x3ff);
-    } else {
+    uint16_t suffix = readHex();
+    if (!utf16_code_unit_is_low_surrogate(suffix)) {
       in.error("second character in surrogate pair is invalid");
     }
-  } else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
+    codePoint = unicode_code_point_from_utf16_surrogate_pair(prefix, suffix);
+  } else if (!utf16_code_unit_is_bmp(prefix)) {
     in.error("invalid unicode code point (in range [0xdc00,0xdfff])");
   }
 
-  return codePointToUtf8(codePoint);
+  appendCodePointToUtf8(codePoint, out);
 }
 
 std::string parseString(Input& in) {
@@ -606,7 +687,7 @@ std::string parseString(Input& in) {
         case 'n':     ret.push_back('\n'); ++in; break;
         case 'r':     ret.push_back('\r'); ++in; break;
         case 't':     ret.push_back('\t'); ++in; break;
-        case 'u':     ++in; ret += decodeUnicodeEscape(in); break;
+        case 'u':     ++in; decodeUnicodeEscape(in, ret); break;
         // clang-format on
         default:
           in.error(
@@ -676,7 +757,7 @@ std::string serialize(dynamic const& dyn, serialization_opts const& opts) {
   std::string ret;
   unsigned indentLevel = 0;
   Printer p(ret, opts.pretty_formatting ? &indentLevel : nullptr, &opts);
-  p(dyn);
+  p(dyn, nullptr);
   return ret;
 }
 
@@ -697,7 +778,7 @@ size_t firstEscapableInWord(T s, const serialization_opts& opts) {
   };
 
   auto isChar = [&](uint8_t c) {
-    // A byte is == c iff it is 0 if xored with c.
+    // A byte is == c iff it is 0 if xor'd with c.
     return isLess(s ^ (kOnes * c), 1);
   };
 
@@ -712,12 +793,13 @@ size_t firstEscapableInWord(T s, const serialization_opts& opts) {
     // set for ascii characters 32 - 127, so the inner loop may run up to 96
     // times. However, for the case where 0 or a handful of bits are set,
     // looping will be minimal through use of findFirstSet.
-    for (size_t i = 0; i < opts.extra_ascii_to_escape_bitmap.size(); ++i) {
+    for (size_t i = 0, e = opts.extra_ascii_to_escape_bitmap.size(); i < e;
+         ++i) {
       const auto offset = i * 64;
       // Clear first 32 characters if this is the first index, since those are
       // always escaped.
       auto bitmap = opts.extra_ascii_to_escape_bitmap[i] &
-          (i == 0 ? uint64_t(-1) << 32 : ~0UL);
+          (i == 0 ? uint64_t(-1) << 32 : ~0ULL);
       while (bitmap) {
         auto bit = folly::findFirstSet(bitmap);
         needsEscape |= isChar(static_cast<uint8_t>(offset + bit - 1));
@@ -740,9 +822,7 @@ size_t firstEscapableInWord(T s, const serialization_opts& opts) {
 // Escape a string so that it is legal to print it in JSON text.
 template <bool EnableExtraAsciiEscapes>
 void escapeStringImpl(
-    StringPiece input,
-    std::string& out,
-    const serialization_opts& opts) {
+    StringPiece input, std::string& out, const serialization_opts& opts) {
   auto hexDigit = [](uint8_t c) -> char {
     return c < 10 ? c + '0' : c - 10 + 'a';
   };
@@ -758,7 +838,7 @@ void escapeStringImpl(
     // it literally into the output string.
     auto firstEsc = p;
     while (firstEsc < e) {
-      auto avail = e - firstEsc;
+      auto avail = to_unsigned(e - firstEsc);
       uint64_t word = 0;
       if (avail >= 8) {
         word = folly::loadUnaligned<uint64_t>(firstEsc);
@@ -876,9 +956,7 @@ void escapeStringImpl(
 }
 
 void escapeString(
-    StringPiece input,
-    std::string& out,
-    const serialization_opts& opts) {
+    StringPiece input, std::string& out, const serialization_opts& opts) {
   if (FOLLY_UNLIKELY(
           opts.extra_ascii_to_escape_bitmap[0] ||
           opts.extra_ascii_to_escape_bitmap[1])) {
@@ -916,7 +994,7 @@ std::string stripComments(StringPiece jsonC) {
         break;
       case State::InString:
         if (s[0] == '\\') {
-          if (UNLIKELY(s.size() == 1)) {
+          if (FOLLY_UNLIKELY(s.size() == 1)) {
             throw std::logic_error("Invalid JSONC: string is not terminated");
           }
           result.push_back(s[0]);
@@ -929,14 +1007,18 @@ std::string stripComments(StringPiece jsonC) {
         result.push_back(s[0]);
         break;
       case State::InlineComment:
-        if (s.startsWith("*/")) {
+        if (s.startsWith('\n')) {
+          // preserve the line break to preserve the line count
+          result.push_back(s[0]);
+        } else if (s.startsWith("*/")) {
           state = State::None;
           ++i;
         }
         break;
       case State::LineComment:
         if (s[0] == '\n') {
-          // skip the line break. It doesn't matter.
+          // preserve the line break to preserve the line count
+          result.push_back(s[0]);
           state = State::None;
         }
         break;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@
 #include <folly/Likely.h>
 #include <folly/ScopeGuard.h>
 #include <folly/Traits.h>
+#include <folly/lang/CheckedMath.h>
 #include <folly/lang/Exception.h>
 #include <folly/memory/Malloc.h>
 
@@ -63,7 +64,7 @@ class fbvector;
     }                                             \
     for (; (first) != (last); ++(first))          \
       OP((first));                                \
-  } while (0);
+  } while (0)
 
 //=============================================================================
 ///////////////////////////////////////////////////////////////////////////////
@@ -73,6 +74,12 @@ class fbvector;
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace folly {
+
+namespace detail {
+inline void* thunk_return_nullptr() {
+  return nullptr;
+}
+} // namespace detail
 
 template <class T, class Allocator>
 class fbvector {
@@ -111,9 +118,7 @@ class fbvector {
     }
 
     // destructor
-    ~Impl() {
-      destroy();
-    }
+    ~Impl() { destroy(); }
 
     // allocation
     // note that 'allocate' and 'deallocate' are inherited from Allocator
@@ -157,7 +162,7 @@ class fbvector {
     }
 
     void init(size_type n) {
-      if (UNLIKELY(n == 0)) {
+      if (FOLLY_UNLIKELY(n == 0)) {
         b_ = e_ = z_ = nullptr;
       } else {
         size_type sz = folly::goodMallocSize(n * sizeof(T)) / sizeof(T);
@@ -230,16 +235,12 @@ class fbvector {
   //---------------------------------------------------------------------------
   // allocate
 
-  T* M_allocate(size_type n) {
-    return impl_.D_allocate(n);
-  }
+  T* M_allocate(size_type n) { return impl_.D_allocate(n); }
 
   //---------------------------------------------------------------------------
   // deallocate
 
-  void M_deallocate(T* p, size_type n) noexcept {
-    impl_.D_deallocate(p, n);
-  }
+  void M_deallocate(T* p, size_type n) noexcept { impl_.D_deallocate(p, n); }
 
   //---------------------------------------------------------------------------
   // construct
@@ -382,7 +383,7 @@ class fbvector {
       //  version is about 0.5% slower on size 262144.
 
       // for (; first != last; ++first) first->~T();
-      FOLLY_FBV_UNROLL_PTR(first, last, FOLLY_FBV_OP)
+      FOLLY_FBV_UNROLL_PTR(first, last, FOLLY_FBV_OP);
 #undef FOLLY_FBV_OP
     }
   }
@@ -421,12 +422,12 @@ class fbvector {
   // allocator
   template <typename... Args>
   static void S_uninitialized_fill_n_a(
-      Allocator& a,
-      T* dest,
-      size_type sz,
-      Args&&... args) {
+      Allocator& a, T* dest, size_type sz, Args&&... args) {
     auto b = dest;
-    auto e = dest + sz;
+    T* e;
+    if (!folly::checked_add(&e, dest, sz)) {
+      throw_exception<std::length_error>("FBVector exceeded max size.");
+    }
     auto rollback = makeGuard([&] { S_destroy_range_a(a, dest, b); });
     for (; b != e; ++b) {
       std::allocator_traits<Allocator>::construct(
@@ -438,12 +439,19 @@ class fbvector {
   // optimized
   static void S_uninitialized_fill_n(T* dest, size_type n) {
     if (folly::IsZeroInitializable<T>::value) {
-      if (LIKELY(n != 0)) {
+      if (FOLLY_LIKELY(n != 0)) {
+        T* sz;
+        if (!folly::checked_add(&sz, dest, n)) {
+          throw_exception<std::length_error>("FBVector exceeded max size.");
+        }
         std::memset((void*)dest, 0, sizeof(T) * n);
       }
     } else {
       auto b = dest;
-      auto e = dest + n;
+      T* e;
+      if (!folly::checked_add(&e, dest, n)) {
+        throw_exception<std::length_error>("FBVector exceeded max size.");
+      }
       auto rollback = makeGuard([&] {
         --b;
         for (; b >= dest; --b) {
@@ -459,7 +467,10 @@ class fbvector {
 
   static void S_uninitialized_fill_n(T* dest, size_type n, const T& value) {
     auto b = dest;
-    auto e = dest + n;
+    T* e;
+    if (!folly::checked_add(&e, dest, n)) {
+      throw_exception<std::length_error>("FBVector exceeded max size.");
+    }
     auto rollback = makeGuard([&] { S_destroy_range(dest, b); });
     for (; b != e; ++b) {
       S_construct(b, value);
@@ -471,7 +482,7 @@ class fbvector {
   // uninitialized_copy
 
   // it is possible to add an optimization for the case where
-  // It = move(T*) and IsRelocatable<T> and Is0Initiailizable<T>
+  // It = move(T*) and IsRelocatable<T> and Is0Initializeable<T>
 
   // wrappers
   template <typename It>
@@ -528,17 +539,15 @@ class fbvector {
     rollback.dismiss();
   }
 
-  static void
-  S_uninitialized_copy_bits(T* dest, const T* first, const T* last) {
+  static void S_uninitialized_copy_bits(
+      T* dest, const T* first, const T* last) {
     if (last != first) {
       std::memcpy((void*)dest, (void*)first, (last - first) * sizeof(T));
     }
   }
 
   static void S_uninitialized_copy_bits(
-      T* dest,
-      std::move_iterator<T*> first,
-      std::move_iterator<T*> last) {
+      T* dest, std::move_iterator<T*> first, std::move_iterator<T*> last) {
     T* bFirst = first.base();
     T* bLast = last.base();
     if (bLast != bFirst) {
@@ -576,8 +585,8 @@ class fbvector {
     }
   }
 
-  static std::move_iterator<T*>
-  S_copy_n(T* dest, std::move_iterator<T*> mIt, size_type n) {
+  static std::move_iterator<T*> S_copy_n(
+      T* dest, std::move_iterator<T*> mIt, size_type n) {
     if (is_trivially_copyable<T>::value) {
       T* first = mIt.base();
       std::memcpy((void*)dest, (void*)first, n * sizeof(T));
@@ -621,7 +630,7 @@ class fbvector {
   //  second exception being thrown. This is a known and unavoidable
   //  deficiency. In lieu of a strong exception guarantee, relocate_undo does
   //  the next best thing: it provides a weak exception guarantee by
-  //  destorying the new data, but leaving the old data in an indeterminate
+  //  destroying the new data, but leaving the old data in an indeterminate
   //  state. Note that that indeterminate state will be valid, since the
   //  old data has not been destroyed; it has merely been the source of a
   //  move, which is required to leave the source in a valid state.
@@ -741,7 +750,7 @@ class fbvector {
   ~fbvector() = default; // the cleanup occurs in impl_
 
   fbvector& operator=(const fbvector& other) {
-    if (UNLIKELY(this == &other)) {
+    if (FOLLY_UNLIKELY(this == &other)) {
       return *this;
     }
 
@@ -759,7 +768,7 @@ class fbvector {
   }
 
   fbvector& operator=(fbvector&& other) {
-    if (UNLIKELY(this == &other)) {
+    if (FOLLY_UNLIKELY(this == &other)) {
       return *this;
     }
     moveFrom(std::move(other), moveIsSwap());
@@ -800,13 +809,9 @@ class fbvector {
     }
   }
 
-  void assign(std::initializer_list<T> il) {
-    assign(il.begin(), il.end());
-  }
+  void assign(std::initializer_list<T> il) { assign(il.begin(), il.end()); }
 
-  allocator_type get_allocator() const noexcept {
-    return impl_;
-  }
+  allocator_type get_allocator() const noexcept { return impl_; }
 
  private:
   // contract dispatch for iterator types fbvector(It first, It last)
@@ -833,9 +838,7 @@ class fbvector {
   }
 
   // contract dispatch for allocator movement in operator=(fbvector&&)
-  void moveFrom(fbvector&& other, std::true_type) {
-    swap(impl_, other.impl_);
-  }
+  void moveFrom(fbvector&& other, std::true_type) { swap(impl_, other.impl_); }
   void moveFrom(fbvector&& other, std::false_type) {
     if (impl_ == other.impl_) {
       impl_.swapData(other.impl_);
@@ -848,9 +851,7 @@ class fbvector {
   // contract dispatch for iterator types in assign(It first, It last)
   template <class ForwardIterator>
   void assign(
-      ForwardIterator first,
-      ForwardIterator last,
-      std::forward_iterator_tag) {
+      ForwardIterator first, ForwardIterator last, std::forward_iterator_tag) {
     const auto newSize = size_type(std::distance(first, last));
     if (newSize > capacity()) {
       impl_.reset(newSize);
@@ -865,8 +866,8 @@ class fbvector {
   }
 
   template <class InputIterator>
-  void
-  assign(InputIterator first, InputIterator last, std::input_iterator_tag) {
+  void assign(
+      InputIterator first, InputIterator last, std::input_iterator_tag) {
     auto p = impl_.b_;
     for (; first != last && p != impl_.e_; ++first, ++p) {
       *p = *first;
@@ -888,7 +889,7 @@ class fbvector {
     return dataIsInternal(t);
   }
   bool dataIsInternal(const T& t) {
-    return UNLIKELY(
+    return FOLLY_UNLIKELY(
         impl_.b_ <= std::addressof(t) && std::addressof(t) < impl_.e_);
   }
 
@@ -896,37 +897,21 @@ class fbvector {
   //---------------------------------------------------------------------------
   // iterators
  public:
-  iterator begin() noexcept {
-    return impl_.b_;
-  }
-  const_iterator begin() const noexcept {
-    return impl_.b_;
-  }
-  iterator end() noexcept {
-    return impl_.e_;
-  }
-  const_iterator end() const noexcept {
-    return impl_.e_;
-  }
-  reverse_iterator rbegin() noexcept {
-    return reverse_iterator(end());
-  }
+  iterator begin() noexcept { return impl_.b_; }
+  const_iterator begin() const noexcept { return impl_.b_; }
+  iterator end() noexcept { return impl_.e_; }
+  const_iterator end() const noexcept { return impl_.e_; }
+  reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
   const_reverse_iterator rbegin() const noexcept {
     return const_reverse_iterator(end());
   }
-  reverse_iterator rend() noexcept {
-    return reverse_iterator(begin());
-  }
+  reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
   const_reverse_iterator rend() const noexcept {
     return const_reverse_iterator(begin());
   }
 
-  const_iterator cbegin() const noexcept {
-    return impl_.b_;
-  }
-  const_iterator cend() const noexcept {
-    return impl_.e_;
-  }
+  const_iterator cbegin() const noexcept { return impl_.b_; }
+  const_iterator cend() const noexcept { return impl_.e_; }
   const_reverse_iterator crbegin() const noexcept {
     return const_reverse_iterator(end());
   }
@@ -938,9 +923,7 @@ class fbvector {
   //---------------------------------------------------------------------------
   // capacity
  public:
-  size_type size() const noexcept {
-    return size_type(impl_.e_ - impl_.b_);
-  }
+  size_type size() const noexcept { return size_type(impl_.e_ - impl_.b_); }
 
   size_type max_size() const noexcept {
     // good luck gettin' there
@@ -969,13 +952,9 @@ class fbvector {
     }
   }
 
-  size_type capacity() const noexcept {
-    return size_type(impl_.z_ - impl_.b_);
-  }
+  size_type capacity() const noexcept { return size_type(impl_.z_ - impl_.b_); }
 
-  bool empty() const noexcept {
-    return impl_.b_ == impl_.e_;
-  }
+  bool empty() const noexcept { return impl_.b_ == impl_.e_; }
 
   void reserve(size_type n) {
     if (n <= capacity()) {
@@ -1022,26 +1001,15 @@ class fbvector {
         xallocx(p, newCapacityBytes, 0, 0) == newCapacityBytes) {
       impl_.z_ += newCap - oldCap;
     } else {
-      T* newB; // intentionally uninitialized
-      if (!catch_exception(
-              [&] {
-                newB = M_allocate(newCap);
-                return true;
-              },
-              [&] { //
-                return false;
-              })) {
+      T* newB = static_cast<T*>(catch_exception(
+          [&] { return M_allocate(newCap); }, //
+          &detail::thunk_return_nullptr));
+      if (!newB) {
         return;
       }
       if (!catch_exception(
-              [&] {
-                M_relocate(newB);
-                return true;
-              },
-              [&] {
-                M_deallocate(newB, newCap);
-                return false;
-              })) {
+              [&] { return M_relocate(newB), true; },
+              [&] { return M_deallocate(newB, newCap), false; })) {
         return;
       }
       if (impl_.b_) {
@@ -1087,7 +1055,7 @@ class fbvector {
     return impl_.b_[n];
   }
   const_reference at(size_type n) const {
-    if (UNLIKELY(n >= size())) {
+    if (FOLLY_UNLIKELY(n >= size())) {
       throw_exception<std::out_of_range>(
           "fbvector: index is greater than size.");
     }
@@ -1118,12 +1086,8 @@ class fbvector {
   //---------------------------------------------------------------------------
   // data access
  public:
-  T* data() noexcept {
-    return impl_.b_;
-  }
-  const T* data() const noexcept {
-    return impl_.b_;
-  }
+  T* data() noexcept { return impl_.b_; }
+  const T* data() const noexcept { return impl_.b_; }
 
   //===========================================================================
   //---------------------------------------------------------------------------
@@ -1172,9 +1136,7 @@ class fbvector {
     }
   }
 
-  void clear() noexcept {
-    M_destroy_range_e(impl_.b_);
-  }
+  void clear() noexcept { M_destroy_range_e(impl_.b_); }
 
  private:
   // std::vector implements a similar function with a different growth
@@ -1314,9 +1276,7 @@ class fbvector {
   //---------------------------------------------------------------------------
   // modifiers (insert)
  private: // we have the private section first because it defines some macros
-  bool isValid(const_iterator it) {
-    return cbegin() <= it && it <= cend();
-  }
+  bool isValid(const_iterator it) { return cbegin() <= it && it <= cend(); }
 
   size_type computeInsertCapacity(size_type n) {
     size_type nc = std::max(computePushBackCapacity(), size() + n);
@@ -1596,8 +1556,8 @@ class fbvector {
   // insert dispatch for iterator types
  private:
   template <class FIt>
-  iterator
-  insert(const_iterator cpos, FIt first, FIt last, std::forward_iterator_tag) {
+  iterator insert(
+      const_iterator cpos, FIt first, FIt last, std::forward_iterator_tag) {
     size_type n = size_type(std::distance(first, last));
     return do_real_insert(
         cpos,
@@ -1609,8 +1569,8 @@ class fbvector {
   }
 
   template <class IIt>
-  iterator
-  insert(const_iterator cpos, IIt first, IIt last, std::input_iterator_tag) {
+  iterator insert(
+      const_iterator cpos, IIt first, IIt last, std::input_iterator_tag) {
     T* position = const_cast<T*>(cpos);
     assert(isValid(position));
     size_type idx = std::distance(begin(), position);
@@ -1638,26 +1598,18 @@ class fbvector {
     return size() == other.size() && std::equal(begin(), end(), other.begin());
   }
 
-  bool operator!=(const fbvector& other) const {
-    return !(*this == other);
-  }
+  bool operator!=(const fbvector& other) const { return !(*this == other); }
 
   bool operator<(const fbvector& other) const {
     return std::lexicographical_compare(
         begin(), end(), other.begin(), other.end());
   }
 
-  bool operator>(const fbvector& other) const {
-    return other < *this;
-  }
+  bool operator>(const fbvector& other) const { return other < *this; }
 
-  bool operator<=(const fbvector& other) const {
-    return !(*this > other);
-  }
+  bool operator<=(const fbvector& other) const { return !(*this > other); }
 
-  bool operator>=(const fbvector& other) const {
-    return !(*this < other);
-  }
+  bool operator>=(const fbvector& other) const { return !(*this < other); }
 
   //===========================================================================
   //---------------------------------------------------------------------------
@@ -1743,7 +1695,7 @@ template <
     class Allocator =
         std::allocator<typename std::iterator_traits<InputIt>::value_type>>
 fbvector(InputIt, InputIt, Allocator = Allocator())
-    ->fbvector<typename std::iterator_traits<InputIt>::value_type, Allocator>;
+    -> fbvector<typename std::iterator_traits<InputIt>::value_type, Allocator>;
 #endif
 
 template <class T, class A, class U>
@@ -1753,6 +1705,6 @@ void erase(fbvector<T, A>& v, U value) {
 
 template <class T, class A, class Predicate>
 void erase_if(fbvector<T, A>& v, Predicate predicate) {
-  v.erase(std::remove_if(v.begin(), v.end(), predicate), v.end());
+  v.erase(std::remove_if(v.begin(), v.end(), std::ref(predicate)), v.end());
 }
 } // namespace folly
